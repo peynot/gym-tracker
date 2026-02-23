@@ -309,6 +309,16 @@
 </header>
 
 <div class="picker-screen" id="pickerScreen">
+  <div id="debugBox" style="margin:12px 16px 0;background:#1a1a1a;border:1px solid #333;border-radius:6px;padding:10px;font-family:monospace;font-size:11px;color:#aaa;display:none;word-break:break-all">
+    <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+      <span style="color:#c8f565;font-weight:700">DEBUG</span>
+      <button onclick="document.getElementById('debugBox').style.display='none'" style="background:none;border:none;color:#555;cursor:pointer;font-size:14px">✕</button>
+    </div>
+    <div id="debugLines"></div>
+  </div>
+  <div style="text-align:right;padding:6px 16px 0">
+    <button onclick="document.getElementById('debugBox').style.display='block';document.getElementById('debugLines').innerHTML='';loadFromSheets()" style="background:none;border:1px solid #333;color:#555;font-family:monospace;font-size:10px;padding:3px 8px;border-radius:3px;cursor:pointer">debug sync</button>
+  </div>
   <div class="picker-group">
     <div class="picker-group-title">Session Weeks</div>
     <button class="workout-btn" onclick="selectWorkout('upper_a')">
@@ -411,7 +421,7 @@ const WORKOUTS = {
           { date: '1/19',   sets: 'DB Row 50×10/10' },
         ]
       },
-      { id: 'lat_raise_a', name: 'Lateral Raise', scheme: '4×12–20', weighted: true, history: [] },
+      { id: 'lat_raise_a', name: 'Lateral Raise (Upper A)', scheme: '4×12–20', weighted: true, history: [] },
       { id: 'rear_delt', name: 'Rear Delt Fly / Face Pull', scheme: '3×15–20', weighted: true, history: [] },
       { id: 'core_a', name: 'Core — Hanging Knee Raise / Dead Bug', scheme: '2–3 sets', weighted: false, history: [] },
     ]
@@ -482,7 +492,7 @@ const WORKOUTS = {
         history: [{ date: '2/19', sets: 'Cable HR: 30×8/30×10' }]
       },
       {
-        id: 'lat_raise_b', name: 'Lateral Raise', scheme: '3×15–20',
+        id: 'lat_raise_b', name: 'Lateral Raise (Upper B)', scheme: '3×15–20',
         weighted: true,
         history: [{ date: '2/19', sets: 'Cables 10×10' }]
       },
@@ -500,7 +510,7 @@ const WORKOUTS = {
     exercises: [
       { id: 'cable_fly', name: 'Cable Fly', scheme: 'pump', weighted: true, history: [] },
       { id: 'rope_pd', name: 'Rope Pushdown', scheme: 'pump', weighted: true, history: [] },
-      { id: 'lat_raise_pump', name: 'Lateral Raise', scheme: 'pump', weighted: true, history: [] },
+      { id: 'lat_raise_pump', name: 'Lateral Raise (Pump)', scheme: 'pump', weighted: true, history: [] },
       { id: 'curls', name: 'Curls', scheme: 'pump', weighted: true, history: [] },
       { id: 'pu_pump', name: 'Pull-Up Variation', scheme: 'high reps', weighted: true, bwOption: true, history: [] },
     ]
@@ -512,7 +522,7 @@ const WORKOUTS = {
       { id: 'pullups_travel', name: 'Pull-Up Variation', scheme: '1×85–90% max + 2–3 back-off ×5–6', weighted: true, bwOption: true, history: [] },
       { id: 'ohp_travel', name: 'OHP', scheme: '3×8–12', weighted: true, history: [] },
       { id: 'high_row_travel', name: 'High Row / Pulldown', scheme: '3×12–15', weighted: true, history: [] },
-      { id: 'lat_raise_travel', name: 'Lateral Raise', scheme: '3×15–20', weighted: true, history: [] },
+      { id: 'lat_raise_travel', name: 'Lateral Raise (Travel)', scheme: '3×15–20', weighted: true, history: [] },
       { id: 'chest_travel', name: 'Chest Press / Pushups', scheme: '3×10–12', weighted: false, history: [] },
       { id: 'chop_travel', name: 'Cable Chop (High→Low)', scheme: '2–3×8–12/side', weighted: true, history: [] },
     ]
@@ -555,16 +565,27 @@ Object.values(WORKOUTS).forEach(wk => {
 
 loadFromSheets();
 
+function dbg(msg) {
+  const box = document.getElementById('debugLines');
+  if (box) {
+    const d = document.createElement('div');
+    d.style.borderBottom = '1px solid #222';
+    d.style.padding = '2px 0';
+    d.textContent = msg;
+    box.appendChild(d);
+  }
+}
+
 async function loadFromSheets() {
-  dbg('Fetching sheet...');
+  dbg('Fetching...');
   try {
     const res = await fetch(SHEET_URL);
-    dbg('HTTP status: ' + res.status);
+    dbg('Status: ' + res.status);
     const text = await res.text();
-    dbg('Raw (first 200): ' + text.slice(0, 200));
+    dbg('Raw start: ' + text.slice(0, 100));
     let rows;
-    try { rows = JSON.parse(text); } catch(e) { dbg('JSON parse error: ' + e); return; }
-    dbg('Rows received: ' + rows.length);
+    try { rows = JSON.parse(text); } catch(e) { dbg('Parse error: ' + e); return; }
+    dbg('Total rows: ' + rows.length);
     sheetHistory = {};
     for (let i = 1; i < rows.length; i++) {
       const [rawDate, workout, exName, sets] = rows[i];
@@ -593,7 +614,7 @@ async function loadFromSheets() {
       sheetHistory[exId].push({ date, sets: String(sets), workout, sheetRow: i + 1 });
     }
     const keys = Object.keys(sheetHistory);
-    dbg('Mapped IDs: ' + (keys.length ? keys.join(', ') : 'NONE'));
+    dbg('Mapped IDs: ' + (keys.length ? keys.join(', ') : 'NONE — name mismatch?'));
     if (activeWorkout) renderContent();
   } catch(e) {
     dbg('FETCH ERROR: ' + e);
