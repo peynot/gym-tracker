@@ -546,31 +546,74 @@ const todayDisplay = today.toLocaleDateString('en-US', { weekday:'short', month:
 const todayShort = today.toLocaleDateString('en-US', { month:'numeric', day:'numeric', year:'2-digit' });
 document.getElementById('headerDate').textContent = todayDisplay;
 
-// Build a lookup: exercise display name → exercise id
+// Build a lookup: exercise display name → exercise id (normalized)
+const normalizeName = s => String(s).toLowerCase().replace(/[^a-z0-9 ]/g, '').replace(/\s+/g, ' ').trim();
 const NAME_TO_ID = {};
 Object.values(WORKOUTS).forEach(wk => {
-  wk.exercises.forEach(ex => { NAME_TO_ID[ex.name.toLowerCase()] = ex.id; });
+  wk.exercises.forEach(ex => { NAME_TO_ID[normalizeName(ex.name)] = ex.id; });
 });
 
 loadFromSheets();
 
 async function loadFromSheets() {
+  dbg('Fetching sheet...');
   try {
     const res = await fetch(SHEET_URL);
-    const rows = await res.json();
+    dbg('HTTP status: ' + res.status);
+    const text = await res.text();
+    dbg('Raw (first 200): ' + text.slice(0, 200));
+    let rows;
+    try { rows = JSON.parse(text); } catch(e) { dbg('JSON parse error: ' + e); return; }
+    dbg('Rows received: ' + rows.length);
     sheetHistory = {};
     for (let i = 1; i < rows.length; i++) {
-      const [date, workout, exName, sets] = rows[i];
+      const [rawDate, workout, exName, sets] = rows[i];
       if (!exName) continue;
-      // Map display name back to internal ID
-      const exId = NAME_TO_ID[exName.toLowerCase()] || exName;
+
+      // Normalize date: ISO timestamp → M/D/YY
+      let date;
+      try {
+        const d = new Date(rawDate);
+        if (!isNaN(d)) {
+          date = d.toLocaleDateString('en-US', { month:'numeric', day:'numeric', year:'2-digit' });
+        } else {
+          date = String(rawDate);
+        }
+      } catch(e) { date = String(rawDate); }
+
+      // Normalize name: strip special chars for matching
+      const normedName = normalizeName(exName);
+      const exId = NAME_TO_ID[normedName] || (() => {
+        return Object.keys(NAME_TO_ID).find(k => normedName.includes(k) || k.includes(normedName))
+               ? NAME_TO_ID[Object.keys(NAME_TO_ID).find(k => normedName.includes(k) || k.includes(normedName))]
+               : exName;
+      })();
+
       if (!sheetHistory[exId]) sheetHistory[exId] = [];
-      sheetHistory[exId].push({ date: String(date), sets: String(sets), workout, sheetRow: i + 1 });
+      sheetHistory[exId].push({ date, sets: String(sets), workout, sheetRow: i + 1 });
     }
+    const keys = Object.keys(sheetHistory);
+    dbg('Mapped IDs: ' + (keys.length ? keys.join(', ') : 'NONE'));
     if (activeWorkout) renderContent();
   } catch(e) {
-    console.warn('Could not load from Sheets:', e);
+    dbg('FETCH ERROR: ' + e);
   }
+}
+
+// ── DEBUG PANEL ────────────────────────────────────────────────────────
+function dbg(msg) {
+  console.log(msg);
+  const panel = document.getElementById('debugPanel');
+  if (!panel) return;
+  const line = document.createElement('div');
+  line.textContent = msg;
+  panel.appendChild(line);
+  panel.scrollTop = panel.scrollHeight;
+}
+
+function toggleDebug() {
+  const panel = document.getElementById('debugPanel');
+  panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
 }
 
 // ── NAV ────────────────────────────────────────────────────────────────
