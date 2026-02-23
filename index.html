@@ -546,6 +546,12 @@ const todayDisplay = today.toLocaleDateString('en-US', { weekday:'short', month:
 const todayShort = today.toLocaleDateString('en-US', { month:'numeric', day:'numeric', year:'2-digit' });
 document.getElementById('headerDate').textContent = todayDisplay;
 
+// Build a lookup: exercise display name → exercise id
+const NAME_TO_ID = {};
+Object.values(WORKOUTS).forEach(wk => {
+  wk.exercises.forEach(ex => { NAME_TO_ID[ex.name.toLowerCase()] = ex.id; });
+});
+
 loadFromSheets();
 
 async function loadFromSheets() {
@@ -554,10 +560,12 @@ async function loadFromSheets() {
     const rows = await res.json();
     sheetHistory = {};
     for (let i = 1; i < rows.length; i++) {
-      const [date, workout, exId, sets] = rows[i];
-      if (!exId) continue;
+      const [date, workout, exName, sets] = rows[i];
+      if (!exName) continue;
+      // Map display name back to internal ID
+      const exId = NAME_TO_ID[exName.toLowerCase()] || exName;
       if (!sheetHistory[exId]) sheetHistory[exId] = [];
-      sheetHistory[exId].push({ date, sets, workout, sheetRow: i + 1 }); // 1-indexed, row 1 = header
+      sheetHistory[exId].push({ date: String(date), sets: String(sets), workout, sheetRow: i + 1 });
     }
     if (activeWorkout) renderContent();
   } catch(e) {
