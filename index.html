@@ -735,6 +735,8 @@ Object.values(WORKOUTS).forEach(wk => {
 });
 
 loadFromSheets();
+// runs after updateSettingsBtn is defined below — defer one tick
+setTimeout(updateSettingsBtn, 0);
 
 function dbg(msg) {
   const box = document.getElementById('debugLines');
@@ -1091,6 +1093,12 @@ function saveApiKey() {
   localStorage.setItem('anthropic_key', key);
   closeSettings();
   showToast(key ? 'Key saved ✓' : 'Key cleared');
+  updateSettingsBtn();
+}
+function updateSettingsBtn() {
+  const btn = document.getElementById('settingsBtn');
+  btn.textContent = ANTHROPIC_API_KEY ? '⚙ ●' : '⚙';
+  btn.style.color = ANTHROPIC_API_KEY ? 'var(--accent)' : '';
 }
 
 // ── ADHOC LOG ──────────────────────────────────────────────────────────
@@ -1212,13 +1220,23 @@ Based on this, give direct, grounded advice for today. Should they train? If yes
       })
     });
     const data = await res.json();
-    const text = data.content?.[0]?.text || 'No response received.';
+    if (data.error) {
+      document.getElementById('adviceForm').style.display = 'none';
+      const respEl = document.getElementById('adviceResponse');
+      respEl.textContent = 'Error: ' + data.error.message + '\n\nType: ' + data.error.type;
+      respEl.classList.add('visible');
+    } else {
+      const text = data.content?.[0]?.text || JSON.stringify(data);
+      document.getElementById('adviceForm').style.display = 'none';
+      const respEl = document.getElementById('adviceResponse');
+      respEl.textContent = text;
+      respEl.classList.add('visible');
+    }
+  } catch(e) {
     document.getElementById('adviceForm').style.display = 'none';
     const respEl = document.getElementById('adviceResponse');
-    respEl.textContent = text;
+    respEl.textContent = 'Fetch error: ' + e.message;
     respEl.classList.add('visible');
-  } catch(e) {
-    showToast('Error reaching Claude');
   }
 
   btn.disabled = false;
