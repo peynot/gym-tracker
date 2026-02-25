@@ -296,6 +296,101 @@
     transition: transform 0.25s, opacity 0.25s; z-index: 200; white-space: nowrap; opacity: 0;
   }
   .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+
+  /* ADHOC LOG */
+  .adhoc-section {
+    margin: 0 0 4px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .adhoc-header {
+    padding: 12px 14px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .adhoc-title { font-family: 'Space Mono', monospace; font-size: 11px; color: var(--muted); letter-spacing: 0.08em; text-transform: uppercase; }
+  .adhoc-body { display: none; padding: 0 14px 14px; border-top: 1px solid var(--border); }
+  .adhoc-section.open .adhoc-body { display: block; }
+  .adhoc-section.open .chevron { transform: rotate(180deg); }
+  .adhoc-input {
+    width: 100%; background: var(--bg); border: 1px solid var(--border); border-radius: 4px;
+    color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 14px;
+    padding: 9px 10px; outline: none; margin: 10px 0 8px; resize: none; height: 70px;
+  }
+  .adhoc-input:focus { border-color: var(--accent); }
+  .adhoc-recent { margin-top: 10px; }
+  .adhoc-recent-title { font-family: 'Space Mono', monospace; font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 6px; }
+  .adhoc-entry { font-size: 12px; color: var(--muted); padding: 4px 0; border-bottom: 1px solid var(--border); font-family: 'Space Mono', monospace; }
+  .adhoc-entry:last-child { border-bottom: none; }
+  .adhoc-entry span { color: var(--text); }
+
+  /* AI ADVICE */
+  .advice-btn {
+    width: 100%; background: transparent; border: 1px solid rgba(200,245,101,0.25);
+    border-radius: 8px; padding: 13px 16px; cursor: pointer;
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 6px; transition: border-color 0.15s;
+  }
+  .advice-btn:active { border-color: var(--accent); }
+  .advice-btn-left { display: flex; align-items: center; gap: 10px; flex: 1; justify-content: center; }
+  .advice-btn-icon { font-size: 18px; flex-shrink: 0; }
+  .advice-btn-name { font-weight: 500; font-size: 14px; color: var(--text); text-align: center; }
+  .advice-btn-desc { font-size: 12px; color: var(--muted); margin-top: 1px; text-align: center; }
+  .advice-btn-arrow { color: var(--muted); font-size: 14px; flex-shrink: 0; }
+
+  /* ADVICE MODAL */
+  .advice-modal-backdrop {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,0.8); z-index: 150;
+    align-items: flex-end; justify-content: center;
+  }
+  .advice-modal-backdrop.visible { display: flex; }
+  .advice-modal {
+    background: #111; border: 1px solid var(--border);
+    border-radius: 12px 12px 0 0; padding: 20px 20px 40px;
+    width: 100%; max-width: 480px; max-height: 85vh; overflow-y: auto;
+  }
+  .advice-modal-title {
+    font-family: 'Space Mono', monospace; font-size: 11px;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--accent); margin-bottom: 14px;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .advice-close { background: none; border: none; color: var(--muted); font-size: 20px; cursor: pointer; }
+
+  /* FEELING SELECTOR */
+  .feeling-label { font-family: 'Space Mono', monospace; font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; }
+  .feeling-options { display: flex; gap: 6px; margin-bottom: 16px; flex-wrap: wrap; }
+  .feeling-btn {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 20px; padding: 6px 14px; cursor: pointer;
+    font-size: 13px; color: var(--muted); transition: all 0.15s;
+  }
+  .feeling-btn.selected { background: rgba(200,245,101,0.1); border-color: var(--accent); color: var(--accent); }
+
+  .advice-notes-input {
+    width: 100%; background: var(--bg); border: 1px solid var(--border);
+    border-radius: 6px; color: var(--text); font-family: 'DM Sans', sans-serif;
+    font-size: 14px; padding: 10px; outline: none; resize: none; height: 64px; margin-bottom: 14px;
+  }
+  .advice-notes-input:focus { border-color: var(--accent); }
+  .advice-go-btn {
+    width: 100%; background: var(--accent); color: #000; border: none;
+    border-radius: 6px; padding: 13px; font-family: 'Space Mono', monospace;
+    font-size: 13px; font-weight: 700; cursor: pointer; margin-bottom: 16px;
+  }
+  .advice-go-btn:disabled { opacity: 0.4; cursor: default; }
+
+  .advice-response {
+    font-size: 14px; line-height: 1.65; color: var(--text);
+    white-space: pre-wrap; display: none;
+  }
+  .advice-response.visible { display: block; }
+  .advice-response strong { color: var(--accent); }
 </style>
 </head>
 <body>
@@ -304,6 +399,7 @@
   <h1>SPLITS</h1>
   <div class="header-right">
     <span class="date-pill" id="headerDate"></span>
+    <button class="back-btn" onclick="openSettings()" id="settingsBtn">⚙</button>
     <button class="back-btn" id="backBtn" style="display:none" onclick="goBack()">← Back</button>
   </div>
 </header>
@@ -349,6 +445,80 @@
       <div class="workout-btn-arrow">›</div>
     </button>
   </div>
+
+  <div class="picker-group">
+    <div class="picker-group-title">Other</div>
+    <!-- ADHOC LOG -->
+    <div class="adhoc-section" id="adhocSection">
+      <div class="adhoc-header" onclick="toggleAdhoc()">
+        <div>
+          <div class="adhoc-title">Log Activity</div>
+          <div style="font-size:12px;color:var(--muted);margin-top:2px">Session, surf, adhoc — anything</div>
+        </div>
+        <div class="chevron" style="color:var(--muted);font-size:10px;transition:transform 0.2s">▼</div>
+      </div>
+      <div class="adhoc-body">
+        <textarea class="adhoc-input" id="adhocText" placeholder="e.g. Surf 2hr, pumping overhead. or S&C session - heavy sleds. or Rest day."></textarea>
+        <div class="btn-row">
+          <button class="btn btn-log" onclick="logAdhoc()">Log ✓</button>
+        </div>
+        <div class="adhoc-recent" id="adhocRecent"></div>
+      </div>
+    </div>
+
+    <!-- AI ADVICE -->
+    <button class="advice-btn" onclick="openAdviceModal()">
+      <div class="advice-btn-left">
+        <div class="advice-btn-icon">◈</div>
+        <div>
+          <div class="advice-btn-name">Get Today's Advice</div>
+          <div class="advice-btn-desc">Based on your log + how you feel</div>
+        </div>
+      </div>
+      <div class="advice-btn-arrow">›</div>
+    </button>
+  </div>
+</div>
+
+<!-- SETTINGS MODAL -->
+<div class="advice-modal-backdrop" id="settingsModal" onclick="if(event.target===this)closeSettings()">
+  <div class="advice-modal">
+    <div class="advice-modal-title">
+      <span>Settings</span>
+      <button class="advice-close" onclick="closeSettings()">✕</button>
+    </div>
+    <div class="feeling-label">Anthropic API Key</div>
+    <input type="password" id="apiKeyInput" class="advice-notes-input" style="height:42px;font-family:monospace;font-size:13px" placeholder="sk-ant-...">
+    <div style="font-size:11px;color:var(--muted);margin:-8px 0 14px">Saved to this device only. Get yours at console.anthropic.com</div>
+    <button class="advice-go-btn" onclick="saveApiKey()">Save Key</button>
+  </div>
+</div>
+
+<!-- ADVICE MODAL -->
+<div class="advice-modal-backdrop" id="adviceModal" onclick="handleAdviceBackdropClick(event)">
+  <div class="advice-modal">
+    <div class="advice-modal-title">
+      <span>Today's Advice</span>
+      <button class="advice-close" onclick="closeAdviceModal()">✕</button>
+    </div>
+
+    <div id="adviceForm">
+      <div class="feeling-label">How are you feeling today?</div>
+      <div class="feeling-options">
+        <button class="feeling-btn" onclick="selectFeeling(this, 'great')">💪 Great</button>
+        <button class="feeling-btn" onclick="selectFeeling(this, 'good')">🙂 Good</button>
+        <button class="feeling-btn" onclick="selectFeeling(this, 'ok')">😐 OK</button>
+        <button class="feeling-btn" onclick="selectFeeling(this, 'tired')">😴 Tired</button>
+        <button class="feeling-btn" onclick="selectFeeling(this, 'sore')">🤕 Sore</button>
+        <button class="feeling-btn" onclick="selectFeeling(this, 'rough')">😮‍💨 Rough</button>
+      </div>
+      <div class="feeling-label">Anything else? (optional)</div>
+      <textarea class="advice-notes-input" id="adviceNotes" placeholder="e.g. Slept 5hr. Left shoulder tight. Surfed yesterday 3hr."></textarea>
+      <button class="advice-go-btn" id="adviceGoBtn" onclick="getAdvice()">Get Advice</button>
+    </div>
+
+    <div class="advice-response" id="adviceResponse"></div>
+  </div>
 </div>
 
 <div class="workout-screen" id="workoutScreen">
@@ -382,6 +552,7 @@
 
 <script>
 const SHEET_URL = 'https://script.google.com/macros/s/AKfycbwU7q1kRmgHqx5K8uc9iscRRzlauPoQnKprqrevpsvxGFX1m7f5GIWFyVeWb-8RzSBc9w/exec';
+let ANTHROPIC_API_KEY = localStorage.getItem('anthropic_key') || '';
 
 const WORKOUTS = {
   upper_a: {
@@ -904,6 +1075,154 @@ function deleteEntry() {
   }
 
   closeModal();
+}
+
+// ── SETTINGS ───────────────────────────────────────────────────────────
+function openSettings() {
+  document.getElementById('apiKeyInput').value = ANTHROPIC_API_KEY;
+  document.getElementById('settingsModal').classList.add('visible');
+}
+function closeSettings() {
+  document.getElementById('settingsModal').classList.remove('visible');
+}
+function saveApiKey() {
+  const key = document.getElementById('apiKeyInput').value.trim();
+  ANTHROPIC_API_KEY = key;
+  localStorage.setItem('anthropic_key', key);
+  closeSettings();
+  showToast(key ? 'Key saved ✓' : 'Key cleared');
+}
+
+// ── ADHOC LOG ──────────────────────────────────────────────────────────
+let adhocOpen = false;
+
+function toggleAdhoc() {
+  adhocOpen = !adhocOpen;
+  const sec = document.getElementById('adhocSection');
+  sec.classList.toggle('open', adhocOpen);
+  renderAdhocRecent();
+}
+
+function logAdhoc() {
+  const text = document.getElementById('adhocText').value.trim();
+  if (!text) { showToast('Nothing to log'); return; }
+
+  showToast('Syncing...');
+  document.getElementById('adhocText').value = '';
+
+  fetch(SHEET_URL, {
+    method: 'POST',
+    mode: 'no-cors',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      date: todayShort,
+      workout: 'Activity Log',
+      exercise: 'Note',
+      sets: text,
+    })
+  }).then(() => {
+    showToast('Logged ✓');
+    loadFromSheets();
+    renderAdhocRecent();
+  }).catch(() => showToast('Error'));
+}
+
+function renderAdhocRecent() {
+  const container = document.getElementById('adhocRecent');
+  if (!container) return;
+  const entries = (sheetHistory['Note'] || []).slice(-5).reverse();
+  if (!entries.length) { container.innerHTML = ''; return; }
+  container.innerHTML = `<div class="adhoc-recent-title">Recent</div>` +
+    entries.map(e => `<div class="adhoc-entry">${e.date} — <span>${e.sets}</span></div>`).join('');
+}
+
+// ── AI ADVICE ──────────────────────────────────────────────────────────
+let selectedFeeling = '';
+
+function openAdviceModal() {
+  selectedFeeling = '';
+  document.getElementById('adviceNotes').value = '';
+  document.getElementById('adviceResponse').classList.remove('visible');
+  document.getElementById('adviceResponse').innerHTML = '';
+  document.getElementById('adviceForm').style.display = 'block';
+  document.querySelectorAll('.feeling-btn').forEach(b => b.classList.remove('selected'));
+  document.getElementById('adviceModal').classList.add('visible');
+}
+
+function closeAdviceModal() {
+  document.getElementById('adviceModal').classList.remove('visible');
+}
+
+function handleAdviceBackdropClick(e) {
+  if (e.target === document.getElementById('adviceModal')) closeAdviceModal();
+}
+
+function selectFeeling(btn, val) {
+  selectedFeeling = val;
+  document.querySelectorAll('.feeling-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+}
+
+async function getAdvice() {
+  if (!selectedFeeling) { showToast('Pick how you feel first'); return; }
+
+  const notes = document.getElementById('adviceNotes').value.trim();
+  const btn = document.getElementById('adviceGoBtn');
+  btn.disabled = true;
+  btn.textContent = 'Thinking...';
+
+  // Build log summary from sheet history
+  const logLines = [];
+  const allEntries = [];
+  Object.entries(sheetHistory).forEach(([exId, entries]) => {
+    entries.forEach(e => allEntries.push({ ...e, exId }));
+  });
+  allEntries.sort((a, b) => new Date(a.date) - new Date(b.date));
+  const recent = allEntries.slice(-40); // last 40 entries
+  recent.forEach(e => {
+    logLines.push(`${e.date} | ${e.workout || ''} | ${e.exId} | ${e.sets}`);
+  });
+
+  const prompt = `You are a concise, science-informed personal trainer reviewing an athlete's workout log. 
+
+CONTEXT:
+- Goal: pull-up progression + upper body aesthetics + surf performance
+- Split: Upper A (pull-up heavy), Lower A (posterior chain), Upper B (volume/OHP), plus surf sessions and S&C
+- Principle: autoregulate based on fatigue; 2 RIR on main lifts; posterior chain work supports surfing
+
+RECENT LOG (last 40 entries, format: date | workout | exercise | sets):
+${logLines.join('\n')}
+
+TODAY:
+- How they feel: ${selectedFeeling}
+${notes ? `- Additional context: ${notes}` : ''}
+- Today's date: ${todayDisplay}
+
+Based on this, give direct, grounded advice for today. Should they train? If yes, which workout and what to focus on or modify? If no, say why and when to come back. Keep it under 150 words. No fluff. Cite your reasoning briefly. If recommending rest, be direct about it.`;
+
+  try {
+    if (!ANTHROPIC_API_KEY) { showToast('Add API key in settings ↗'); btn.disabled = false; btn.textContent = 'Get Advice'; return; }
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-api-key': ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 400,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+    const data = await res.json();
+    const text = data.content?.[0]?.text || 'No response received.';
+    document.getElementById('adviceForm').style.display = 'none';
+    const respEl = document.getElementById('adviceResponse');
+    respEl.textContent = text;
+    respEl.classList.add('visible');
+  } catch(e) {
+    showToast('Error reaching Claude');
+  }
+
+  btn.disabled = false;
+  btn.textContent = 'Get Advice';
 }
 
 // ── TOAST ──────────────────────────────────────────────────────────────
