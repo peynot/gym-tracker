@@ -125,6 +125,76 @@
   }
   .content { padding: 10px 16px 60px; }
 
+  /* WARMUP CARD */
+  .warmup-card {
+    background: rgba(200,245,101,0.03);
+    border: 1px solid rgba(200,245,101,0.15);
+    border-radius: 8px;
+    margin-bottom: 12px;
+    overflow: hidden;
+  }
+  .warmup-header {
+    padding: 10px 14px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .warmup-title {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent);
+    font-weight: 700;
+  }
+  .warmup-body {
+    display: none;
+    padding: 0 14px 12px;
+    border-top: 1px solid rgba(200,245,101,0.1);
+  }
+  .warmup-card.open .warmup-body { display: block; }
+  .warmup-card.open .chevron { transform: rotate(180deg); }
+  .warmup-item {
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    user-select: none;
+  }
+  .warmup-item:last-child { border-bottom: none; }
+  .warmup-check {
+    width: 18px;
+    height: 18px;
+    border: 2px solid var(--border);
+    border-radius: 4px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
+  }
+  .warmup-item.checked .warmup-check {
+    background: var(--accent);
+    border-color: var(--accent);
+  }
+  .warmup-item.checked .warmup-check::after {
+    content: '✓';
+    color: #000;
+    font-size: 12px;
+    font-weight: 700;
+  }
+  .warmup-text {
+    font-size: 13px;
+    color: var(--text);
+    transition: opacity 0.15s;
+  }
+  .warmup-item.checked .warmup-text {
+    opacity: 0.4;
+  }
+
   /* EXERCISE CARDS */
   .exercise-card {
     background: var(--surface);
@@ -448,7 +518,6 @@
 
   <div class="picker-group">
     <div class="picker-group-title">Other</div>
-    <!-- ADHOC LOG -->
     <div class="adhoc-section" id="adhocSection">
       <div class="adhoc-header" onclick="toggleAdhoc()">
         <div>
@@ -466,7 +535,6 @@
       </div>
     </div>
 
-    <!-- AI ADVICE -->
     <button class="advice-btn" onclick="openAdviceModal()">
       <div class="advice-btn-left">
         <div class="advice-btn-icon">◈</div>
@@ -480,7 +548,6 @@
   </div>
 </div>
 
-<!-- SETTINGS MODAL -->
 <div class="advice-modal-backdrop" id="settingsModal" onclick="if(event.target===this)closeSettings()">
   <div class="advice-modal">
     <div class="advice-modal-title">
@@ -494,7 +561,6 @@
   </div>
 </div>
 
-<!-- ADVICE MODAL -->
 <div class="advice-modal-backdrop" id="adviceModal" onclick="handleAdviceBackdropClick(event)">
   <div class="advice-modal">
     <div class="advice-modal-title">
@@ -530,7 +596,6 @@
   <div class="content" id="mainContent"></div>
 </div>
 
-<!-- EDIT MODAL -->
 <div class="modal-backdrop" id="editModal" onclick="handleModalBackdropClick(event)">
   <div class="modal">
     <div class="modal-title">Edit Entry</div>
@@ -553,6 +618,15 @@
 <script>
 const SHEET_URL = 'https://script.google.com/macros/s/AKfycbwU7q1kRmgHqx5K8uc9iscRRzlauPoQnKprqrevpsvxGFX1m7f5GIWFyVeWb-8RzSBc9w/exec';
 let ANTHROPIC_API_KEY = localStorage.getItem('anthropic_key') || '';
+
+const WARMUPS = {
+  upper_a: ['Band pull-aparts 2×15', 'Wall slides 2×10', 'Dead hang 2×20–30s', 'Scapular pull-ups 2×8'],
+  upper_b: ['Band pull-aparts 2×15', 'Wall slides 2×10', 'Shoulder CARs 1×5/side', 'Dead hang 1×30s'],
+  lower_a: ['Cossack squat 2×8/side', 'Hip 90/90 switches 1×10/side', 'Hip airplanes 1×8/side', 'Ankle circles + heel raises 1×10/side'],
+  lower_b_travel: ['KB swing warm-up 2×10 light', 'Hip airplanes 1×8/side', 'Ankle + Achilles mobilization'],
+  pump: ['Light band work or arm circles', 'Whatever feels tight'],
+  upper_b_travel: ['Band pull-aparts 2×15', 'Wall slides 2×10', 'Shoulder CARs 1×5/side', 'Dead hang 1×30s'],
+};
 
 const WORKOUTS = {
   upper_a: {
@@ -592,14 +666,15 @@ const WORKOUTS = {
           { date: '1/19',   sets: 'DB Row 50×10/10' },
         ]
       },
-      { id: 'lat_raise_a', name: 'Lateral Raise (Upper A)', scheme: '4×12–20', weighted: true, history: [] },
+      { id: 'lat_raise_a', name: 'Lateral Raise', scheme: '4×12–20', weighted: true, history: [] },
       { id: 'rear_delt', name: 'Rear Delt Fly / Face Pull', scheme: '3×15–20', weighted: true, history: [] },
+      { id: 'curls', name: 'Curls', scheme: '2×10–12', weighted: true, history: [] },
       { id: 'core_a', name: 'Core — Hanging Knee Raise / Dead Bug', scheme: '2–3 sets', weighted: false, history: [] },
     ]
   },
   lower_a: {
     name: 'Lower A — Posterior Chain',
-    goal: 'Surf power · knee health · no burnout',
+    goal: 'Surf power · knee health · no burnout (~50 min)',
     exercises: [
       {
         id: 'trap_rdl', name: 'Trap Bar DL / RDL', scheme: '3×3–6',
@@ -622,33 +697,25 @@ const WORKOUTS = {
         ]
       },
       {
-        id: 'rev_nordic', name: 'Reverse Nordic', scheme: '2–3×5–8',
+        id: 'hip_thrust_kb_swings', name: 'Hip Thrust OR KB Swings', scheme: '3×8–12 (alternate each session)',
+        weighted: true,
+        history: [
+          { date: '(init)', sets: 'HT: 115×8/135×8/135×8' },
+          { date: '12/27', sets: 'KB: 45×20' },
+          { date: '1/6',   sets: 'KB: 35×20' },
+          { date: '1/13',   sets: 'HT: 50×10 (box)' },
+        ]
+      },
+      {
+        id: 'rev_nordic_leg_lifts', name: 'Reverse Nordic + Seated Long Leg Lifts', scheme: 'Superset · 2–3 rounds',
         weighted: false,
         history: [
-          { date: '12/27', sets: 'Med band ×8' },
-          { date: '1/6',   sets: 'Pink band ×8' },
-          { date: '1/13',  sets: 'Pink band ×9' },
-        ]
-      },
-      {
-        id: 'hip_thrust', name: 'Hip Thrust', scheme: '2–3×8–12',
-        weighted: true,
-        history: [
-          { date: '(init)', sets: '115×8/135×8/135×8' },
-          { date: '1/13',   sets: '50×10 (box)' },
-        ]
-      },
-      {
-        id: 'kb_swings_a', name: 'KB Swings', scheme: '2–3×15–20',
-        weighted: true,
-        history: [
-          { date: '12/27', sets: '45×20' },
-          { date: '1/6',   sets: '35×20' },
+          { date: '12/27', sets: 'RN: Med band ×8' },
+          { date: '1/6',   sets: 'RN: Pink band ×8' },
+          { date: '1/13',  sets: 'RN: Pink band ×9' },
         ]
       },
       { id: 'calves', name: 'Calves', scheme: '2×15–20', weighted: true, history: [{ date: '(init)', sets: '30×12' }] },
-      { id: 'leg_lifts', name: 'Seated Long Leg Lifts', scheme: '2–3×10–12/side', weighted: false, history: [] },
-      { id: 'cossack', name: 'Cossack Squat', scheme: '2–3×10–12 total', weighted: false, history: [] },
     ]
   },
   upper_b: {
@@ -671,7 +738,12 @@ const WORKOUTS = {
         history: [{ date: '2/19', sets: 'Cable HR: 30×8/30×10' }]
       },
       {
-        id: 'lat_raise_b', name: 'Lateral Raise (Upper B)', scheme: '3×15–20',
+        id: 'serratus', name: 'Serratus Pullover / Long-Lever Pushdown', scheme: '3×12–15',
+        weighted: true,
+        history: []
+      },
+      {
+        id: 'lat_raise_b', name: 'Lateral Raise', scheme: '3×15–20',
         weighted: true,
         history: [{ date: '2/19', sets: 'Cables 10×10' }]
       },
@@ -689,8 +761,8 @@ const WORKOUTS = {
     exercises: [
       { id: 'cable_fly', name: 'Cable Fly', scheme: 'pump', weighted: true, history: [] },
       { id: 'rope_pd', name: 'Rope Pushdown', scheme: 'pump', weighted: true, history: [] },
-      { id: 'lat_raise_pump', name: 'Lateral Raise (Pump)', scheme: 'pump', weighted: true, history: [] },
-      { id: 'curls', name: 'Curls', scheme: 'pump', weighted: true, history: [] },
+      { id: 'lat_raise_pump', name: 'Lateral Raise', scheme: 'pump', weighted: true, history: [] },
+      { id: 'curls_pump', name: 'Curls', scheme: 'pump', weighted: true, history: [] },
       { id: 'pu_pump', name: 'Pull-Up Variation', scheme: 'high reps', weighted: true, bwOption: true, history: [] },
     ]
   },
@@ -701,7 +773,8 @@ const WORKOUTS = {
       { id: 'pullups_travel', name: 'Pull-Up Variation', scheme: '1×85–90% max + 2–3 back-off ×5–6', weighted: true, bwOption: true, history: [] },
       { id: 'ohp_travel', name: 'OHP', scheme: '3×8–12', weighted: true, history: [] },
       { id: 'high_row_travel', name: 'High Row / Pulldown', scheme: '3×12–15', weighted: true, history: [] },
-      { id: 'lat_raise_travel', name: 'Lateral Raise (Travel)', scheme: '3×15–20', weighted: true, history: [] },
+      { id: 'serratus_travel', name: 'Serratus Pullover / Long-Lever Pushdown', scheme: '3×12–15', weighted: true, history: [] },
+      { id: 'lat_raise_travel', name: 'Lateral Raise', scheme: '3×15–20', weighted: true, history: [] },
       { id: 'chest_travel', name: 'Chest Press / Pushups', scheme: '3×10–12', weighted: false, history: [] },
       { id: 'chop_travel', name: 'Cable Chop (High→Low)', scheme: '2–3×8–12/side', weighted: true, history: [] },
     ]
@@ -717,25 +790,23 @@ const WORKOUTS = {
   },
 };
 
-// ── STATE ──────────────────────────────────────────────────────────────
 let activeWorkout = null;
 let openCards = new Set();
 let setCounters = {};
 let sessionLog = {};
 let sheetHistory = {};
+let warmupChecks = {};
 try { sessionLog = JSON.parse(localStorage.getItem('gymlog_v2') || '{}'); } catch(e) {}
+try { warmupChecks = JSON.parse(localStorage.getItem('warmup_checks') || '{}'); } catch(e) {}
 
-// Edit modal state
 let editingExId = null;
-let editingIndex = null; // index in the merged history array from sheet
+let editingIndex = null;
 
-// ── INIT ───────────────────────────────────────────────────────────────
 const today = new Date();
 const todayDisplay = today.toLocaleDateString('en-US', { weekday:'short', month:'short', day:'numeric' });
 const todayShort = today.toLocaleDateString('en-US', { month:'numeric', day:'numeric', year:'2-digit' });
 document.getElementById('headerDate').textContent = todayDisplay;
 
-// Build a lookup: exercise display name → exercise id (normalized)
 const normalizeName = s => String(s).toLowerCase().replace(/[^a-z0-9 ]/g, '').replace(/\s+/g, ' ').trim();
 const NAME_TO_ID = {};
 Object.values(WORKOUTS).forEach(wk => {
@@ -743,7 +814,6 @@ Object.values(WORKOUTS).forEach(wk => {
 });
 
 loadFromSheets();
-// runs after updateSettingsBtn is defined below — defer one tick
 setTimeout(updateSettingsBtn, 0);
 
 function dbg(msg) {
@@ -772,7 +842,6 @@ async function loadFromSheets() {
       const [rawDate, workout, exName, sets] = rows[i];
       if (!exName) continue;
 
-      // Normalize date: ISO timestamp → M/D/YY
       let date;
       try {
         const d = new Date(rawDate);
@@ -783,7 +852,6 @@ async function loadFromSheets() {
         }
       } catch(e) { date = String(rawDate); }
 
-      // Normalize name: strip special chars for matching
       const normedName = normalizeName(exName);
       const exId = NAME_TO_ID[normedName] || (() => {
         return Object.keys(NAME_TO_ID).find(k => normedName.includes(k) || k.includes(normedName))
@@ -802,23 +870,6 @@ async function loadFromSheets() {
   }
 }
 
-// ── DEBUG PANEL ────────────────────────────────────────────────────────
-function dbg(msg) {
-  console.log(msg);
-  const panel = document.getElementById('debugPanel');
-  if (!panel) return;
-  const line = document.createElement('div');
-  line.textContent = msg;
-  panel.appendChild(line);
-  panel.scrollTop = panel.scrollHeight;
-}
-
-function toggleDebug() {
-  const panel = document.getElementById('debugPanel');
-  panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
-}
-
-// ── NAV ────────────────────────────────────────────────────────────────
 function selectWorkout(id) {
   activeWorkout = id;
   openCards = new Set();
@@ -840,10 +891,33 @@ function goBack() {
   document.getElementById('backBtn').style.display = 'none';
 }
 
-// ── RENDER ─────────────────────────────────────────────────────────────
 function renderContent() {
   const wk = WORKOUTS[activeWorkout];
   let html = '';
+
+  if (WARMUPS[activeWorkout]) {
+    const warmupKey = `${activeWorkout}-${todayShort}`;
+    const checks = warmupChecks[warmupKey] || [];
+    const isOpen = openCards.has('warmup');
+    
+    html += `<div class="warmup-card ${isOpen ? 'open' : ''}" id="card-warmup">
+      <div class="warmup-header" onclick="toggleCard('warmup')">
+        <div class="warmup-title">Warm-Up</div>
+        <div class="chevron">▼</div>
+      </div>
+      <div class="warmup-body">`;
+    
+    WARMUPS[activeWorkout].forEach((item, i) => {
+      const checked = checks.includes(i);
+      html += `<div class="warmup-item ${checked ? 'checked' : ''}" onclick="toggleWarmupItem(${i})">
+        <div class="warmup-check"></div>
+        <div class="warmup-text">${item}</div>
+      </div>`;
+    });
+    
+    html += `</div></div>`;
+  }
+
   wk.exercises.forEach(ex => {
     const hist = getAllHistory(ex);
     const last = hist.length ? hist[hist.length - 1] : null;
@@ -870,6 +944,19 @@ function renderContent() {
   document.getElementById('mainContent').innerHTML = html || '<div class="empty">No exercises.</div>';
 }
 
+function toggleWarmupItem(index) {
+  const warmupKey = `${activeWorkout}-${todayShort}`;
+  if (!warmupChecks[warmupKey]) warmupChecks[warmupKey] = [];
+  const idx = warmupChecks[warmupKey].indexOf(index);
+  if (idx > -1) {
+    warmupChecks[warmupKey].splice(idx, 1);
+  } else {
+    warmupChecks[warmupKey].push(index);
+  }
+  try { localStorage.setItem('warmup_checks', JSON.stringify(warmupChecks)); } catch(e) {}
+  renderContent();
+}
+
 function getAllHistory(ex) {
   const fromSheet = sheetHistory[ex.id] || [];
   const base = fromSheet.length > 0 ? fromSheet : ex.history;
@@ -882,7 +969,6 @@ function getAllHistory(ex) {
 function renderHistory(hist, exId) {
   if (!hist.length) return '<div style="padding:8px 0 4px;font-size:12px;color:var(--muted)">No history yet.</div>';
   const rows = hist.map((h, i) => {
-    // Only show edit button for entries that came from sheet (have sheetRow) or local session
     const canEdit = h.sheetRow || (sessionLog[exId] || []).some(l => l.date === h.date && l.sets === h.sets);
     return `<div class="history-entry">
       <span class="history-date">${h.date}</span>
@@ -922,7 +1008,6 @@ function buildSetRow(ex, num) {
   </div>`;
 }
 
-// ── LOG ────────────────────────────────────────────────────────────────
 function toggleCard(id) {
   openCards.has(id) ? openCards.delete(id) : openCards.add(id);
   renderContent();
@@ -991,7 +1076,6 @@ function logExercise(exId) {
     .catch(() => showToast('Saved locally'));
 }
 
-// ── EDIT MODAL ─────────────────────────────────────────────────────────
 function openEditModal(exId, histIndex, event) {
   event.stopPropagation();
   const ex = WORKOUTS[activeWorkout].exercises.find(e => e.id === exId);
@@ -1027,7 +1111,6 @@ function saveEdit() {
   const hist = getAllHistory(ex);
   const entry = hist[editingIndex];
 
-  // Update in sheet if it has a sheetRow
   if (entry.sheetRow) {
     fetch(SHEET_URL, {
       method: 'POST',
@@ -1044,7 +1127,6 @@ function saveEdit() {
     }).then(() => { loadFromSheets(); showToast('Updated ✓'); })
       .catch(() => showToast('Error — try again'));
   } else {
-    // local session entry — update in sessionLog
     const localArr = sessionLog[editingExId] || [];
     const localIdx = localArr.findIndex(l => l.date === entry.date && l.sets === entry.sets);
     if (localIdx !== -1) {
@@ -1087,7 +1169,6 @@ function deleteEntry() {
   closeModal();
 }
 
-// ── SETTINGS ───────────────────────────────────────────────────────────
 function openSettings() {
   document.getElementById('apiKeyInput').value = ANTHROPIC_API_KEY;
   document.getElementById('settingsModal').classList.add('visible');
@@ -1109,7 +1190,6 @@ function updateSettingsBtn() {
   btn.style.color = ANTHROPIC_API_KEY ? 'var(--accent)' : '';
 }
 
-// ── ADHOC LOG ──────────────────────────────────────────────────────────
 let adhocOpen = false;
 
 function toggleAdhoc() {
@@ -1152,7 +1232,6 @@ function renderAdhocRecent() {
     entries.map(e => `<div class="adhoc-entry">${e.date} — <span>${e.sets}</span></div>`).join('');
 }
 
-// ── AI ADVICE ──────────────────────────────────────────────────────────
 let selectedFeeling = '';
 
 function openAdviceModal() {
@@ -1187,14 +1266,13 @@ async function getAdvice() {
   btn.disabled = true;
   btn.textContent = 'Thinking...';
 
-  // Build log summary from sheet history
   const logLines = [];
   const allEntries = [];
   Object.entries(sheetHistory).forEach(([exId, entries]) => {
     entries.forEach(e => allEntries.push({ ...e, exId }));
   });
   allEntries.sort((a, b) => new Date(a.date) - new Date(b.date));
-  const recent = allEntries.slice(-40); // last 40 entries
+  const recent = allEntries.slice(-40);
   recent.forEach(e => {
     logLines.push(`${e.date} | ${e.workout || ''} | ${e.exId} | ${e.sets}`);
   });
@@ -1251,7 +1329,6 @@ Based on this, give direct, grounded advice for today. Should they train? If yes
   btn.textContent = 'Get Advice';
 }
 
-// ── TOAST ──────────────────────────────────────────────────────────────
 function showToast(msg) {
   const t = document.getElementById('toast');
   t.textContent = msg; t.classList.add('show');
