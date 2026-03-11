@@ -386,6 +386,98 @@
   .adhoc-body { display: none; padding: 0 14px 14px; border-top: 1px solid var(--border); }
   .adhoc-section.open .adhoc-body { display: block; }
   .adhoc-section.open .chevron { transform: rotate(180deg); }
+  
+  .activity-type-btns {
+    display: flex;
+    gap: 6px;
+    margin: 10px 0 12px;
+  }
+  .activity-type-btn {
+    flex: 1;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 10px;
+    cursor: pointer;
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    transition: all 0.15s;
+  }
+  .activity-type-btn.selected {
+    background: rgba(200,245,101,0.1);
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+  
+  .activity-form {
+    display: none;
+  }
+  .activity-form.visible {
+    display: block;
+  }
+  
+  .activity-field {
+    margin-bottom: 10px;
+  }
+  .activity-field-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 6px;
+  }
+  .activity-input {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    padding: 8px 10px;
+    outline: none;
+  }
+  .activity-input:focus { border-color: var(--accent); }
+  
+  .activity-textarea {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    padding: 8px 10px;
+    outline: none;
+    resize: none;
+    height: 80px;
+  }
+  .activity-textarea:focus { border-color: var(--accent); }
+  
+  .effort-btns {
+    display: flex;
+    gap: 6px;
+  }
+  .effort-btn {
+    flex: 1;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 8px;
+    cursor: pointer;
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    transition: all 0.15s;
+  }
+  .effort-btn.selected {
+    background: rgba(200,245,101,0.1);
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+  
   .adhoc-input {
     width: 100%; background: var(--bg); border: 1px solid var(--border); border-radius: 4px;
     color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 14px;
@@ -522,14 +614,63 @@
       <div class="adhoc-header" onclick="toggleAdhoc()">
         <div>
           <div class="adhoc-title">Log Activity</div>
-          <div style="font-size:12px;color:var(--muted);margin-top:2px">Session, surf, adhoc — anything</div>
+          <div style="font-size:12px;color:var(--muted);margin-top:2px">Surf, session, rest, or anything else</div>
         </div>
         <div class="chevron" style="color:var(--muted);font-size:10px;transition:transform 0.2s">▼</div>
       </div>
       <div class="adhoc-body">
-        <textarea class="adhoc-input" id="adhocText" placeholder="e.g. Surf 2hr, pumping overhead. or S&C session - heavy sleds. or Rest day."></textarea>
-        <div class="btn-row">
-          <button class="btn btn-log" onclick="logAdhoc()">Log ✓</button>
+        <div class="activity-type-btns">
+          <button class="activity-type-btn" id="activitySurfBtn" onclick="selectActivityType('surf')">🏄 Surf</button>
+          <button class="activity-type-btn" id="activitySessionBtn" onclick="selectActivityType('session')">💪 Session</button>
+          <button class="activity-type-btn" id="activityRestBtn" onclick="selectActivityType('rest')">😴 Rest</button>
+        </div>
+        
+        <div class="activity-form" id="surfForm">
+          <div class="activity-field">
+            <div class="activity-field-label">Location</div>
+            <input type="text" class="activity-input" id="surfLocation" placeholder="e.g. OB, Pacifica">
+          </div>
+          <div class="activity-field">
+            <div class="activity-field-label">Length (hours)</div>
+            <input type="text" class="activity-input" id="surfLength" placeholder="e.g. 2">
+          </div>
+          <div class="activity-field">
+            <div class="activity-field-label">Effort (1-5)</div>
+            <div class="effort-btns">
+              <button class="effort-btn" onclick="selectEffort('surf', 1)">1</button>
+              <button class="effort-btn" onclick="selectEffort('surf', 2)">2</button>
+              <button class="effort-btn" onclick="selectEffort('surf', 3)">3</button>
+              <button class="effort-btn" onclick="selectEffort('surf', 4)">4</button>
+              <button class="effort-btn" onclick="selectEffort('surf', 5)">5</button>
+            </div>
+          </div>
+        </div>
+        
+        <div class="activity-form" id="sessionForm">
+          <div class="activity-field">
+            <div class="activity-field-label">Workout Details</div>
+            <textarea class="activity-textarea" id="sessionDetails" placeholder="Paste or describe the workout..."></textarea>
+          </div>
+          <div class="activity-field">
+            <div class="activity-field-label">Effort (1-5)</div>
+            <div class="effort-btns">
+              <button class="effort-btn" onclick="selectEffort('session', 1)">1</button>
+              <button class="effort-btn" onclick="selectEffort('session', 2)">2</button>
+              <button class="effort-btn" onclick="selectEffort('session', 3)">3</button>
+              <button class="effort-btn" onclick="selectEffort('session', 4)">4</button>
+              <button class="effort-btn" onclick="selectEffort('session', 5)">5</button>
+            </div>
+          </div>
+        </div>
+        
+        <div class="activity-form" id="restForm">
+          <div style="padding:10px 0;text-align:center;color:var(--muted);font-size:12px">
+            Click "Log ✓" to log a rest day
+          </div>
+        </div>
+        
+        <div class="btn-row" style="margin-top:12px">
+          <button class="btn btn-log" onclick="logActivity()">Log ✓</button>
         </div>
         <div class="adhoc-recent" id="adhocRecent"></div>
       </div>
@@ -667,9 +808,9 @@ const WORKOUTS = {
         ]
       },
       { id: 'lat_raise_a', name: 'Lateral Raise', scheme: '4×12–20', weighted: true, history: [] },
-      { id: 'rear_delt', name: 'Rear Delt Fly / Face Pull', scheme: '3×15–20', weighted: true, history: [] },
+      { id: 'rear_delt', name: 'Rear Delt Fly / Face Pull', scheme: '3×15–20', weighted: true, history: [], options: ['Rear Delt Fly', 'Face Pull'] },
       { id: 'curls', name: 'Curls', scheme: '2×10–12', weighted: true, history: [] },
-      { id: 'core_a', name: 'Core — Hanging Knee Raise / Dead Bug', scheme: '2–3 sets', weighted: false, history: [] },
+      { id: 'core_a', name: 'Core — Hanging Knee Raise / Dead Bug', scheme: '2–3 sets', weighted: false, history: [], options: ['Hanging Knee Raise', 'Dead Bug'] },
     ]
   },
   lower_a: {
@@ -677,7 +818,7 @@ const WORKOUTS = {
     goal: 'Surf power · knee health · no burnout (~50 min)',
     exercises: [
       {
-        id: 'trap_rdl', name: 'Trap Bar DL / RDL', scheme: '3×3–6',
+        id: 'trap_rdl', name: 'RDL (DB or Trap Bar)', scheme: '3×3–6',
         weighted: true,
         history: [
           { date: '(init)', sets: '55×6' },
@@ -697,13 +838,12 @@ const WORKOUTS = {
         ]
       },
       {
-        id: 'hip_thrust_kb_swings', name: 'Hip Thrust OR KB Swings', scheme: '3×8–12 (alternate each session)',
+        id: 'hip_thrust_kb_swings', name: 'KB Swings OR Box Jumps', scheme: '3×8–12 (alternate each session)',
         weighted: true,
+        options: ['KB Swings', 'Box Jumps'],
         history: [
-          { date: '(init)', sets: 'HT: 115×8/135×8/135×8' },
           { date: '12/27', sets: 'KB: 45×20' },
           { date: '1/6',   sets: 'KB: 35×20' },
-          { date: '1/13',   sets: 'HT: 50×10 (box)' },
         ]
       },
       {
@@ -733,12 +873,7 @@ const WORKOUTS = {
         history: [{ date: '2/19', sets: '35×8/35×10/35×10' }]
       },
       {
-        id: 'high_row', name: 'Straight-Arm Pulldown / High Row', scheme: '3×12–15',
-        weighted: true,
-        history: [{ date: '2/19', sets: 'Cable HR: 30×8/30×10' }]
-      },
-      {
-        id: 'serratus', name: 'Serratus Pullover / Long-Lever Pushdown', scheme: '3×12–15',
+        id: 'serratus', name: 'Serratus Pullover', scheme: '3×12–15',
         weighted: true,
         history: []
       },
@@ -748,7 +883,12 @@ const WORKOUTS = {
         history: [{ date: '2/19', sets: 'Cables 10×10' }]
       },
       {
-        id: 'chest_press_b', name: 'Chest Press / Pushups', scheme: '3×10–12',
+        id: 'curls_b', name: 'Curls', scheme: '2×10–12',
+        weighted: true,
+        history: []
+      },
+      {
+        id: 'chest_press_b', name: 'Feet-Elevated Pushups / Low-Incline Press', scheme: '3×10–12',
         weighted: false,
         history: [{ date: '2/19', sets: 'PU: 12/12/12' }]
       },
@@ -773,9 +913,9 @@ const WORKOUTS = {
       { id: 'pullups_travel', name: 'Pull-Up Variation', scheme: '1×85–90% max + 2–3 back-off ×5–6', weighted: true, bwOption: true, history: [] },
       { id: 'ohp_travel', name: 'OHP', scheme: '3×8–12', weighted: true, history: [] },
       { id: 'high_row_travel', name: 'High Row / Pulldown', scheme: '3×12–15', weighted: true, history: [] },
-      { id: 'serratus_travel', name: 'Serratus Pullover / Long-Lever Pushdown', scheme: '3×12–15', weighted: true, history: [] },
+      { id: 'serratus_travel', name: 'Serratus Pullover', scheme: '3×12–15', weighted: true, history: [] },
       { id: 'lat_raise_travel', name: 'Lateral Raise', scheme: '3×15–20', weighted: true, history: [] },
-      { id: 'chest_travel', name: 'Chest Press / Pushups', scheme: '3×10–12', weighted: false, history: [] },
+      { id: 'chest_travel', name: 'Feet-Elevated Pushups / Low-Incline Press', scheme: '3×10–12', weighted: false, history: [] },
       { id: 'chop_travel', name: 'Cable Chop (High→Low)', scheme: '2–3×8–12/side', weighted: true, history: [] },
     ]
   },
@@ -784,8 +924,9 @@ const WORKOUTS = {
     goal: 'Light + athletic · 35–45 min',
     exercises: [
       { id: 'kb_swings', name: 'KB Swings', scheme: '4×6–10 (power)', weighted: true, history: [] },
-      { id: 'step_downs', name: 'Step-Downs / SL RDL', scheme: '2–3×8/side', weighted: false, history: [] },
-      { id: 'mobility', name: 'Mobility Finish', scheme: 'Cossack · hip airplanes · ankle', weighted: false, history: [] },
+      { id: 'step_downs', name: 'Single-Leg RDL', scheme: '2–3×8/side', weighted: false, history: [] },
+      { id: 'cossack_finisher', name: 'Cossack Squat', scheme: '2×8–10/side (finisher)', weighted: false, history: [] },
+      { id: 'mobility', name: 'Mobility Finish', scheme: 'Hip airplanes · ankle work', weighted: false, history: [] },
     ]
   },
 };
@@ -796,8 +937,10 @@ let setCounters = {};
 let sessionLog = {};
 let sheetHistory = {};
 let warmupChecks = {};
+let exerciseVariants = {};
 try { sessionLog = JSON.parse(localStorage.getItem('gymlog_v2') || '{}'); } catch(e) {}
 try { warmupChecks = JSON.parse(localStorage.getItem('warmup_checks') || '{}'); } catch(e) {}
+try { exerciseVariants = JSON.parse(localStorage.getItem('exercise_variants') || '{}'); } catch(e) {}
 
 let editingExId = null;
 let editingIndex = null;
@@ -980,15 +1123,57 @@ function renderHistory(hist, exId) {
 }
 
 function renderLogForm(ex) {
-  const count = setCounters[ex.id] || 3;
+  const hist = getAllHistory(ex);
+  const lastEntry = hist.length ? hist[hist.length - 1] : null;
+  
+  // Count sets from last entry
+  let defaultSetCount = 3;
+  if (lastEntry && lastEntry.sets) {
+    const setMatches = lastEntry.sets.match(/[×x]/gi);
+    if (setMatches) {
+      defaultSetCount = setMatches.length;
+    } else {
+      const slashCount = (lastEntry.sets.match(/\//g) || []).length;
+      defaultSetCount = slashCount > 0 ? slashCount + 1 : 3;
+    }
+  }
+  if (ex.id.includes('pullup') || ex.id.includes('pu_')) defaultSetCount = Math.max(defaultSetCount, 5);
+  
+  if (!setCounters[ex.id]) setCounters[ex.id] = defaultSetCount;
+  const count = setCounters[ex.id];
+  
+  let html = '';
+  
+  // Add variant selector if exercise has options
+  if (ex.options && ex.options.length > 0) {
+    const selectedVariant = exerciseVariants[ex.id] || ex.options[0];
+    html += `<div style="margin-bottom:10px">
+      <div class="log-form-title">Select Variation</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">`;
+    ex.options.forEach(opt => {
+      const isSelected = opt === selectedVariant;
+      html += `<button onclick="selectVariant('${ex.id}', '${opt}')" 
+        style="background:${isSelected ? 'var(--accent)' : 'var(--surface)'};
+               color:${isSelected ? '#000' : 'var(--text)'};
+               border:1px solid ${isSelected ? 'var(--accent)' : 'var(--border)'};
+               padding:6px 12px;border-radius:4px;cursor:pointer;
+               font-family:'Space Mono',monospace;font-size:11px;
+               transition:all 0.15s">
+        ${opt}
+      </button>`;
+    });
+    html += `</div></div>`;
+  }
+  
   let rows = '';
   for (let i = 1; i <= count; i++) rows += buildSetRow(ex, i);
-  return `<div class="log-form-title">Log Today</div>
+  html += `<div class="log-form-title">Log Today</div>
     <div class="sets-builder" id="sets-${ex.id}">${rows}</div>
     <div class="btn-row">
       <button class="btn btn-add-set" onclick="addSet('${ex.id}')">+ Set</button>
       <button class="btn btn-log" onclick="logExercise('${ex.id}')">Log ✓</button>
     </div>`;
+  return html;
 }
 
 function buildSetRow(ex, num) {
@@ -1067,11 +1252,18 @@ function logExercise(exId) {
 
   const wk = WORKOUTS[activeWorkout];
   const ex = wk.exercises.find(e => e.id === exId);
+  
+  // Prepend variant if selected
+  let exerciseName = ex ? ex.name : exId;
+  if (ex && ex.options && exerciseVariants[exId]) {
+    exerciseName = exerciseVariants[exId];
+  }
+  
   fetch(SHEET_URL, {
     method: 'POST',
     mode: 'no-cors',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ date: todayShort, workout: wk.name, exercise: ex ? ex.name : exId, sets: setsStr })
+    body: JSON.stringify({ date: todayShort, workout: wk.name, exercise: exerciseName, sets: setsStr })
   }).then(() => { showToast('Logged ✓'); loadFromSheets(); })
     .catch(() => showToast('Saved locally'));
 }
@@ -1191,12 +1383,97 @@ function updateSettingsBtn() {
 }
 
 let adhocOpen = false;
+let activityType = null;
+let activityEffort = { surf: null, session: null };
 
 function toggleAdhoc() {
   adhocOpen = !adhocOpen;
   const sec = document.getElementById('adhocSection');
   sec.classList.toggle('open', adhocOpen);
-  renderAdhocRecent();
+  if (adhocOpen) {
+    renderAdhocRecent();
+    if (!activityType) selectActivityType('surf');
+  }
+}
+
+function selectActivityType(type) {
+  activityType = type;
+  
+  document.querySelectorAll('.activity-type-btn').forEach(b => b.classList.remove('selected'));
+  document.getElementById(`activity${type.charAt(0).toUpperCase() + type.slice(1)}Btn`).classList.add('selected');
+  
+  document.querySelectorAll('.activity-form').forEach(f => f.classList.remove('visible'));
+  document.getElementById(`${type}Form`).classList.add('visible');
+}
+
+function selectEffort(type, effort) {
+  activityEffort[type] = effort;
+  const parent = document.getElementById(`${type}Form`);
+  parent.querySelectorAll('.effort-btn').forEach(b => b.classList.remove('selected'));
+  parent.querySelectorAll('.effort-btn')[effort - 1].classList.add('selected');
+}
+
+function logActivity() {
+  let text = '';
+  
+  if (activityType === 'surf') {
+    const location = document.getElementById('surfLocation').value.trim();
+    const length = document.getElementById('surfLength').value.trim();
+    const effort = activityEffort.surf;
+    
+    if (!location || !length) {
+      showToast('Fill in location and length');
+      return;
+    }
+    
+    text = `Surf: ${location}, ${length}hr`;
+    if (effort) text += `, effort ${effort}/5`;
+    
+    document.getElementById('surfLocation').value = '';
+    document.getElementById('surfLength').value = '';
+    activityEffort.surf = null;
+    document.querySelectorAll('#surfForm .effort-btn').forEach(b => b.classList.remove('selected'));
+    
+  } else if (activityType === 'session') {
+    const details = document.getElementById('sessionDetails').value.trim();
+    const effort = activityEffort.session;
+    
+    if (!details) {
+      showToast('Add workout details');
+      return;
+    }
+    
+    text = `Session: ${details}`;
+    if (effort) text += ` | Effort ${effort}/5`;
+    
+    document.getElementById('sessionDetails').value = '';
+    activityEffort.session = null;
+    document.querySelectorAll('#sessionForm .effort-btn').forEach(b => b.classList.remove('selected'));
+    
+  } else if (activityType === 'rest') {
+    text = 'Rest day';
+  } else {
+    showToast('Select activity type');
+    return;
+  }
+
+  showToast('Syncing...');
+
+  fetch(SHEET_URL, {
+    method: 'POST',
+    mode: 'no-cors',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      date: todayShort,
+      workout: 'Activity Log',
+      exercise: 'Note',
+      sets: text,
+    })
+  }).then(() => {
+    showToast('Logged ✓');
+    loadFromSheets();
+    renderAdhocRecent();
+  }).catch(() => showToast('Error'));
 }
 
 function logAdhoc() {
@@ -1333,6 +1610,12 @@ function showToast(msg) {
   const t = document.getElementById('toast');
   t.textContent = msg; t.classList.add('show');
   setTimeout(() => t.classList.remove('show'), 1800);
+}
+
+function selectVariant(exId, variant) {
+  exerciseVariants[exId] = variant;
+  try { localStorage.setItem('exercise_variants', JSON.stringify(exerciseVariants)); } catch(e) {}
+  renderContent();
 }
 </script>
 </body>
