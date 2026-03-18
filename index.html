@@ -478,12 +478,6 @@
     color: var(--accent);
   }
   
-  .adhoc-input {
-    width: 100%; background: var(--bg); border: 1px solid var(--border); border-radius: 4px;
-    color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 14px;
-    padding: 9px 10px; outline: none; margin: 10px 0 8px; resize: none; height: 70px;
-  }
-  .adhoc-input:focus { border-color: var(--accent); }
   .adhoc-recent { margin-top: 10px; }
   .adhoc-recent-title { font-family: 'Space Mono', monospace; font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 6px; }
   .adhoc-entry { font-size: 12px; color: var(--muted); padding: 4px 0; border-bottom: 1px solid var(--border); font-family: 'Space Mono', monospace; }
@@ -681,7 +675,18 @@
         <div class="advice-btn-icon">◈</div>
         <div>
           <div class="advice-btn-name">Get Today's Advice</div>
-          <div class="advice-btn-desc">Based on your log + how you feel</div>
+          <div class="advice-btn-desc">Training recommendation based on how you feel</div>
+        </div>
+      </div>
+      <div class="advice-btn-arrow">›</div>
+    </button>
+
+    <button class="advice-btn" onclick="openProgressModal()">
+      <div class="advice-btn-left">
+        <div class="advice-btn-icon">📊</div>
+        <div>
+          <div class="advice-btn-name">Progress Check-In</div>
+          <div class="advice-btn-desc">Motivation + insights from your recent logs</div>
         </div>
       </div>
       <div class="advice-btn-arrow">›</div>
@@ -725,6 +730,24 @@
     </div>
 
     <div class="advice-response" id="adviceResponse"></div>
+  </div>
+</div>
+
+<div class="advice-modal-backdrop" id="progressModal" onclick="handleProgressBackdropClick(event)">
+  <div class="advice-modal">
+    <div class="advice-modal-title">
+      <span>Progress Check-In</span>
+      <button class="advice-close" onclick="closeProgressModal()">✕</button>
+    </div>
+
+    <div id="progressForm">
+      <div style="padding:10px 0;text-align:center;color:var(--muted);font-size:13px;line-height:1.6">
+        AI will analyze your recent training logs and give you insights + motivation.
+      </div>
+      <button class="advice-go-btn" id="progressGoBtn" onclick="getProgress()">Analyze My Progress</button>
+    </div>
+
+    <div class="advice-response" id="progressResponse"></div>
   </div>
 </div>
 
@@ -912,9 +935,9 @@ const WORKOUTS = {
     exercises: [
       { id: 'pullups_travel', name: 'Pull-Up Variation', scheme: '1×85–90% max + 2–3 back-off ×5–6', weighted: true, bwOption: true, history: [] },
       { id: 'ohp_travel', name: 'OHP', scheme: '3×8–12', weighted: true, history: [] },
-      { id: 'high_row_travel', name: 'High Row / Pulldown', scheme: '3×12–15', weighted: true, history: [] },
       { id: 'serratus_travel', name: 'Serratus Pullover', scheme: '3×12–15', weighted: true, history: [] },
       { id: 'lat_raise_travel', name: 'Lateral Raise', scheme: '3×15–20', weighted: true, history: [] },
+      { id: 'curls_travel', name: 'Curls', scheme: '2×10–12', weighted: true, history: [] },
       { id: 'chest_travel', name: 'Feet-Elevated Pushups / Low-Incline Press', scheme: '3×10–12', weighted: false, history: [] },
       { id: 'chop_travel', name: 'Cable Chop (High→Low)', scheme: '2–3×8–12/side', weighted: true, history: [] },
     ]
@@ -1065,7 +1088,20 @@ function renderContent() {
     const hist = getAllHistory(ex);
     const last = hist.length ? hist[hist.length - 1] : null;
     const isOpen = openCards.has(ex.id);
-    if (!setCounters[ex.id]) setCounters[ex.id] = ex.id.includes('pullup') || ex.id.includes('pu_') ? 5 : 3;
+    if (!setCounters[ex.id]) {
+      let defaultSetCount = 3;
+      if (last && last.sets) {
+        const setMatches = last.sets.match(/[×x]/gi);
+        if (setMatches) {
+          defaultSetCount = setMatches.length;
+        } else {
+          const slashCount = (last.sets.match(/\//g) || []).length;
+          defaultSetCount = slashCount > 0 ? slashCount + 1 : 3;
+        }
+      }
+      if (ex.id.includes('pullup') || ex.id.includes('pu_')) defaultSetCount = Math.max(defaultSetCount, 5);
+      setCounters[ex.id] = defaultSetCount;
+    }
 
     html += `<div class="exercise-card ${isOpen ? 'open' : ''}" id="card-${ex.id}">
       <div class="exercise-header" onclick="toggleCard('${ex.id}')">
@@ -1126,7 +1162,6 @@ function renderLogForm(ex) {
   const hist = getAllHistory(ex);
   const lastEntry = hist.length ? hist[hist.length - 1] : null;
   
-  // Count sets from last entry
   let defaultSetCount = 3;
   if (lastEntry && lastEntry.sets) {
     const setMatches = lastEntry.sets.match(/[×x]/gi);
@@ -1144,7 +1179,6 @@ function renderLogForm(ex) {
   
   let html = '';
   
-  // Add variant selector if exercise has options
   if (ex.options && ex.options.length > 0) {
     const selectedVariant = exerciseVariants[ex.id] || ex.options[0];
     html += `<div style="margin-bottom:10px">
@@ -1253,17 +1287,22 @@ function logExercise(exId) {
   const wk = WORKOUTS[activeWorkout];
   const ex = wk.exercises.find(e => e.id === exId);
   
-  // Prepend variant if selected
   let exerciseName = ex ? ex.name : exId;
   if (ex && ex.options && exerciseVariants[exId]) {
     exerciseName = exerciseVariants[exId];
   }
   
+  const dateObj = new Date();
+  const year = dateObj.getFullYear();
+  const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+  const day = String(dateObj.getDate()).padStart(2, '0');
+  const isoDate = `${year}-${month}-${day}`;
+  
   fetch(SHEET_URL, {
     method: 'POST',
     mode: 'no-cors',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ date: todayShort, workout: wk.name, exercise: exerciseName, sets: setsStr })
+    body: JSON.stringify({ date: isoDate, workout: wk.name, exercise: exerciseName, sets: setsStr })
   }).then(() => { showToast('Logged ✓'); loadFromSheets(); })
     .catch(() => showToast('Saved locally'));
 }
@@ -1459,12 +1498,18 @@ function logActivity() {
 
   showToast('Syncing...');
 
+  const dateObj = new Date();
+  const year = dateObj.getFullYear();
+  const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+  const day = String(dateObj.getDate()).padStart(2, '0');
+  const isoDate = `${year}-${month}-${day}`;
+
   fetch(SHEET_URL, {
     method: 'POST',
     mode: 'no-cors',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      date: todayShort,
+      date: isoDate,
       workout: 'Activity Log',
       exercise: 'Note',
       sets: text,
@@ -1472,31 +1517,7 @@ function logActivity() {
   }).then(() => {
     showToast('Logged ✓');
     loadFromSheets();
-    renderAdhocRecent();
-  }).catch(() => showToast('Error'));
-}
-
-function logAdhoc() {
-  const text = document.getElementById('adhocText').value.trim();
-  if (!text) { showToast('Nothing to log'); return; }
-
-  showToast('Syncing...');
-  document.getElementById('adhocText').value = '';
-
-  fetch(SHEET_URL, {
-    method: 'POST',
-    mode: 'no-cors',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      date: todayShort,
-      workout: 'Activity Log',
-      exercise: 'Note',
-      sets: text,
-    })
-  }).then(() => {
-    showToast('Logged ✓');
-    loadFromSheets();
-    renderAdhocRecent();
+    setTimeout(renderAdhocRecent, 500);
   }).catch(() => showToast('Error'));
 }
 
@@ -1504,7 +1525,10 @@ function renderAdhocRecent() {
   const container = document.getElementById('adhocRecent');
   if (!container) return;
   const entries = (sheetHistory['Note'] || []).slice(-5).reverse();
-  if (!entries.length) { container.innerHTML = ''; return; }
+  if (!entries.length) { 
+    container.innerHTML = '<div style="margin-top:10px;font-size:11px;color:var(--muted);font-family:monospace">No recent activity</div>'; 
+    return; 
+  }
   container.innerHTML = `<div class="adhoc-recent-title">Recent</div>` +
     entries.map(e => `<div class="adhoc-entry">${e.date} — <span>${e.sets}</span></div>`).join('');
 }
@@ -1529,10 +1553,95 @@ function handleAdviceBackdropClick(e) {
   if (e.target === document.getElementById('adviceModal')) closeAdviceModal();
 }
 
+function openProgressModal() {
+  document.getElementById('progressResponse').classList.remove('visible');
+  document.getElementById('progressResponse').innerHTML = '';
+  document.getElementById('progressForm').style.display = 'block';
+  document.getElementById('progressModal').classList.add('visible');
+}
+
+function closeProgressModal() {
+  document.getElementById('progressModal').classList.remove('visible');
+}
+
+function handleProgressBackdropClick(e) {
+  if (e.target === document.getElementById('progressModal')) closeProgressModal();
+}
+
 function selectFeeling(btn, val) {
   selectedFeeling = val;
   document.querySelectorAll('.feeling-btn').forEach(b => b.classList.remove('selected'));
   btn.classList.add('selected');
+}
+
+async function getProgress() {
+  const btn = document.getElementById('progressGoBtn');
+  btn.disabled = true;
+  btn.textContent = 'Analyzing...';
+
+  const logLines = [];
+  const allEntries = [];
+  Object.entries(sheetHistory).forEach(([exId, entries]) => {
+    entries.forEach(e => allEntries.push({ ...e, exId }));
+  });
+  allEntries.sort((a, b) => new Date(a.date) - new Date(b.date));
+  const recent = allEntries.slice(-50);
+  recent.forEach(e => {
+    logLines.push(`${e.date} | ${e.workout || ''} | ${e.exId} | ${e.sets}`);
+  });
+
+  const prompt = `You are an encouraging personal trainer analyzing an athlete's training log. Your goal is to motivate and provide insights.
+
+CONTEXT:
+- Goal: pull-up progression + upper body aesthetics (shoulder width) + surf performance
+- Split: Upper A (pull-up heavy), Lower A (posterior chain), Upper B (volume/OHP)
+- Training age: 2-3 years
+- Current bodyweight: ~125 lbs at 5'7"
+
+RECENT LOG (last 50 entries, format: date | workout | exercise | sets):
+${logLines.join('\n')}
+
+Provide a motivating progress check-in (under 200 words). Include:
+1. What's improving (be specific with numbers when possible)
+2. What stands out as a win
+3. One area with room to push harder
+4. Brief encouragement
+
+Be direct and authentic. No AI slop. If progress is slow somewhere, say it but frame constructively.`;
+
+  try {
+    if (!ANTHROPIC_API_KEY) { showToast('Add API key in settings ↗'); btn.disabled = false; btn.textContent = 'Analyze My Progress'; return; }
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-api-key': ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 500,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+    const data = await res.json();
+    if (data.error) {
+      document.getElementById('progressForm').style.display = 'none';
+      const respEl = document.getElementById('progressResponse');
+      respEl.textContent = 'Error: ' + data.error.message + '\n\nType: ' + data.error.type;
+      respEl.classList.add('visible');
+    } else {
+      const text = data.content?.[0]?.text || JSON.stringify(data);
+      document.getElementById('progressForm').style.display = 'none';
+      const respEl = document.getElementById('progressResponse');
+      respEl.textContent = text;
+      respEl.classList.add('visible');
+    }
+  } catch(e) {
+    document.getElementById('progressForm').style.display = 'none';
+    const respEl = document.getElementById('progressResponse');
+    respEl.textContent = 'Fetch error: ' + e.message;
+    respEl.classList.add('visible');
+  }
+
+  btn.disabled = false;
+  btn.textContent = 'Analyze My Progress';
 }
 
 async function getAdvice() {
