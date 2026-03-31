@@ -5,8 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Tracker</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500&display=swap');
-
   :root {
     --bg: #0a0a0a;
     --surface: #131313;
@@ -14,7 +12,7 @@
     --accent: #c8f565;
     --accent2: #6bf;
     --text: #e8e8e8;
-    --muted: #555;
+    --muted: #888;
     --red: #ff5c5c;
   }
 
@@ -23,11 +21,12 @@
   body {
     background: var(--bg);
     color: var(--text);
-    font-family: 'DM Sans', sans-serif;
-    font-size: 15px;
+    font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    font-size: 16px;
     min-height: 100vh;
     max-width: 480px;
     margin: 0 auto;
+    -webkit-font-smoothing: antialiased;
   }
 
   header {
@@ -38,29 +37,32 @@
     justify-content: space-between;
   }
   header h1 {
-    font-family: 'Space Mono', monospace;
-    font-size: 13px;
-    letter-spacing: 0.14em;
+    font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
     text-transform: uppercase;
     color: var(--accent);
   }
   .header-right { display: flex; align-items: center; gap: 10px; }
   .date-pill {
-    font-family: 'Space Mono', monospace;
-    font-size: 11px;
+    font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    font-size: 12px;
+    font-weight: 500;
     color: var(--muted);
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: 4px;
-    padding: 4px 8px;
+    padding: 5px 10px;
   }
   .back-btn {
     background: none;
     border: 1px solid var(--border);
     color: var(--muted);
-    font-family: 'Space Mono', monospace;
-    font-size: 11px;
-    padding: 4px 10px;
+    font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    font-size: 12px;
+    font-weight: 500;
+    padding: 5px 12px;
     border-radius: 4px;
     cursor: pointer;
   }
@@ -69,9 +71,10 @@
   .picker-screen { padding: 16px; }
   .picker-group { margin-bottom: 20px; }
   .picker-group-title {
-    font-family: 'Space Mono', monospace;
-    font-size: 10px;
-    letter-spacing: 0.12em;
+    font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
     text-transform: uppercase;
     color: var(--muted);
     margin-bottom: 8px;
@@ -93,8 +96,8 @@
     transition: border-color 0.15s;
   }
   .workout-btn:active { border-color: var(--accent); }
-  .workout-btn-name { font-weight: 500; font-size: 14px; color: var(--text); }
-  .workout-btn-desc { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .workout-btn-name { font-weight: 600; font-size: 15px; color: var(--text); }
+  .workout-btn-desc { font-size: 13px; color: var(--muted); margin-top: 3px; }
   .workout-btn-arrow { color: var(--muted); font-size: 14px; }
 
   /* WORKOUT VIEW */
@@ -106,19 +109,20 @@
     align-items: center;
     justify-content: space-between;
   }
-  .workout-title { font-family: 'Space Mono', monospace; font-size: 12px; font-weight: 700; }
+  .workout-title { font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 13px; font-weight: 700; }
   .workout-date-badge {
-    font-family: 'Space Mono', monospace;
-    font-size: 11px;
+    font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    font-size: 12px;
+    font-weight: 600;
     color: var(--accent);
     background: rgba(200,245,101,0.07);
     border: 1px solid rgba(200,245,101,0.18);
-    padding: 3px 8px;
+    padding: 4px 10px;
     border-radius: 4px;
   }
   .workout-goal {
     padding: 8px 16px;
-    font-size: 12px;
+    font-size: 13px;
     color: var(--muted);
     font-style: italic;
     border-bottom: 1px solid var(--border);
@@ -141,12 +145,12 @@
     justify-content: space-between;
   }
   .warmup-title {
-    font-family: 'Space Mono', monospace;
-    font-size: 11px;
-    letter-spacing: 0.08em;
+    font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
     text-transform: uppercase;
     color: var(--accent);
-    font-weight: 700;
   }
   .warmup-body {
     display: none;
@@ -187,7 +191,7 @@
     font-weight: 700;
   }
   .warmup-text {
-    font-size: 13px;
+    font-size: 14px;
     color: var(--text);
     transition: opacity 0.15s;
   }
@@ -211,11 +215,11 @@
     gap: 8px;
   }
   .ex-left { flex: 1; min-width: 0; }
-  .ex-name { font-weight: 500; font-size: 14px; }
-  .ex-scheme { font-size: 11px; color: var(--muted); font-family: 'Space Mono', monospace; margin-top: 2px; }
+  .ex-name { font-weight: 600; font-size: 15px; }
+  .ex-scheme { font-size: 12px; color: var(--muted); font-weight: 500; margin-top: 3px; }
   .ex-right { text-align: right; flex-shrink: 0; }
-  .ex-last { font-size: 11px; color: var(--accent2); font-family: 'Space Mono', monospace; }
-  .ex-last-date { font-size: 10px; color: var(--muted); font-family: 'Space Mono', monospace; margin-top: 1px; }
+  .ex-last { font-size: 12px; color: var(--accent2); font-weight: 600; }
+  .ex-last-date { font-size: 11px; color: var(--muted); font-weight: 500; margin-top: 2px; }
   .chevron { color: var(--muted); font-size: 10px; transition: transform 0.2s; flex-shrink: 0; }
   .exercise-card.open .chevron { transform: rotate(180deg); }
   .exercise-body {
@@ -235,12 +239,12 @@
     gap: 6px;
   }
   .history-entry:last-child { border-bottom: none; }
-  .history-date { color: var(--muted); font-family: 'Space Mono', monospace; font-size: 11px; width: 50px; flex-shrink: 0; }
-  .history-sets { flex: 1; color: var(--text); font-family: 'Space Mono', monospace; font-size: 11px; }
+  .history-date { color: var(--muted); font-weight: 500; font-size: 12px; width: 55px; flex-shrink: 0; }
+  .history-sets { flex: 1; color: var(--text); font-weight: 500; font-size: 12px; }
   .edit-entry-btn {
     background: none; border: 1px solid var(--border);
-    color: var(--muted); font-family: 'Space Mono', monospace;
-    font-size: 10px; padding: 3px 7px; border-radius: 3px;
+    color: var(--muted); font-weight: 500;
+    font-size: 11px; padding: 4px 8px; border-radius: 3px;
     cursor: pointer; flex-shrink: 0; white-space: nowrap;
   }
   .edit-entry-btn:active { opacity: 0.6; }
@@ -264,26 +268,28 @@
     max-width: 480px;
   }
   .modal-title {
-    font-family: 'Space Mono', monospace;
-    font-size: 11px;
-    letter-spacing: 0.1em;
+    font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
     text-transform: uppercase;
     color: var(--muted);
     margin-bottom: 4px;
   }
   .modal-subtitle {
-    font-size: 13px;
-    font-weight: 500;
+    font-size: 14px;
+    font-weight: 600;
     margin-bottom: 14px;
     color: var(--text);
   }
   .modal-field-label {
-    font-family: 'Space Mono', monospace;
-    font-size: 10px;
+    font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    font-size: 11px;
+    font-weight: 600;
     color: var(--muted);
     margin-bottom: 6px;
     text-transform: uppercase;
-    letter-spacing: 0.08em;
+    letter-spacing: 0.06em;
   }
   .modal-input {
     width: 100%;
@@ -291,15 +297,16 @@
     border: 1px solid var(--border);
     border-radius: 6px;
     color: var(--text);
-    font-family: 'Space Mono', monospace;
-    font-size: 14px;
+    font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    font-size: 15px;
+    font-weight: 500;
     padding: 10px 12px;
     outline: none;
     margin-bottom: 14px;
   }
   .modal-input:focus { border-color: var(--accent); }
   .modal-hint {
-    font-size: 11px;
+    font-size: 12px;
     color: var(--muted);
     margin-bottom: 16px;
     margin-top: -10px;
@@ -307,7 +314,8 @@
   .modal-btn-row { display: flex; gap: 8px; }
   .modal-btn {
     flex: 1; border: none; border-radius: 6px; cursor: pointer;
-    font-family: 'Space Mono', monospace; font-size: 12px;
+    font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    font-size: 13px;
     font-weight: 700; padding: 12px; transition: opacity 0.15s;
   }
   .modal-btn:active { opacity: 0.65; }
@@ -318,51 +326,57 @@
   /* LOG FORM */
   .divider { height: 1px; background: var(--border); margin: 10px 0; }
   .log-form-title {
-    font-size: 10px; color: var(--muted); margin-bottom: 8px;
-    font-family: 'Space Mono', monospace; letter-spacing: 0.1em; text-transform: uppercase;
+    font-size: 11px; color: var(--muted); margin-bottom: 8px;
+    font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    font-weight: 600;
+    letter-spacing: 0.08em; text-transform: uppercase;
   }
   .sets-builder { display: flex; flex-direction: column; gap: 6px; margin-bottom: 8px; }
   .set-row { display: flex; gap: 6px; align-items: center; }
-  .set-num { font-family: 'Space Mono', monospace; font-size: 11px; color: var(--muted); width: 18px; text-align: right; flex-shrink: 0; }
+  .set-num { font-weight: 500; font-size: 12px; color: var(--muted); width: 20px; text-align: right; flex-shrink: 0; }
   .set-row input {
     background: var(--bg);
     border: 1px solid var(--border);
     border-radius: 4px;
     color: var(--text);
-    font-family: 'Space Mono', monospace;
-    font-size: 13px;
-    padding: 7px 8px;
+    font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    padding: 8px 10px;
     text-align: center;
     outline: none;
     -webkit-appearance: none;
     min-width: 0;
   }
   .set-row input:focus { border-color: var(--accent); }
-  .set-row input::placeholder { color: var(--muted); font-size: 11px; }
-  .w-input { width: 70px; }
-  .r-input { width: 60px; }
-  .note-input { flex: 1; text-align: left; font-size: 12px; }
-  .set-label { font-size: 12px; color: var(--muted); flex-shrink: 0; }
+  .set-row input::placeholder { color: var(--muted); font-size: 12px; }
+  .w-input { width: 75px; }
+  .r-input { width: 65px; }
+  .note-input { flex: 1; text-align: left; font-size: 13px; }
+  .set-label { font-size: 13px; color: var(--muted); flex-shrink: 0; }
   .remove-set { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 18px; padding: 0 2px; line-height: 1; }
 
   .btn-row { display: flex; gap: 6px; margin-top: 6px; }
   .btn {
     border: none; border-radius: 4px; cursor: pointer;
-    font-family: 'Space Mono', monospace; font-size: 11px;
-    letter-spacing: 0.03em; padding: 9px 12px;
+    font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.02em; padding: 10px 14px;
     transition: opacity 0.15s; white-space: nowrap;
   }
   .btn:active { opacity: 0.65; }
   .btn-add-set { background: transparent; border: 1px solid var(--border); color: var(--muted); }
   .btn-log { background: var(--accent); color: #000; font-weight: 700; flex: 1; }
 
-  .empty { text-align: center; padding: 40px 0; color: var(--muted); font-size: 12px; font-family: 'Space Mono', monospace; }
+  .empty { text-align: center; padding: 40px 0; color: var(--muted); font-size: 13px; font-weight: 500; }
   .toast {
     position: fixed; bottom: 24px; left: 50%;
     transform: translateX(-50%) translateY(40px);
     background: var(--accent); color: #000;
-    font-family: 'Space Mono', monospace; font-size: 12px; font-weight: 700;
-    padding: 9px 18px; border-radius: 6px;
+    font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    font-size: 13px; font-weight: 700;
+    padding: 10px 20px; border-radius: 6px;
     transition: transform 0.25s, opacity 0.25s; z-index: 200; white-space: nowrap; opacity: 0;
   }
   .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
