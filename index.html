@@ -1184,13 +1184,27 @@ function getAllHistory(ex) {
   return [...base, ...local].sort((a, b) => new Date(a.date) - new Date(b.date));
 }
 
+function sumReps(setsStr) {
+  // Extract all rep numbers — handles "10×5", "BW×8", "8 / 7 / 6", "10/10/10/10"
+  const matches = setsStr.match(/[×x]\s*(\d+(?:\.\d+)?)/gi) || [];
+  if (matches.length) {
+    return matches.reduce((sum, m) => sum + parseFloat(m.replace(/[×x\s]/i, '')), 0);
+  }
+  // Fallback: bare numbers separated by / (e.g. "8 / 8 / 7 / 7")
+  const parts = setsStr.split('/').map(p => parseFloat(p.trim())).filter(n => !isNaN(n));
+  return parts.reduce((s, n) => s + n, 0);
+}
+
 function renderHistory(hist, exId) {
   if (!hist.length) return '<div style="padding:8px 0 4px;font-size:12px;color:var(--muted)">No history yet.</div>';
+  const isPullup = ['pullups', 'pullups_b', 'pu_pump', 'pullups_travel'].includes(exId);
   const rows = hist.map((h, i) => {
     const canEdit = h.sheetRow || (sessionLog[exId] || []).some(l => l.date === h.date && l.sets === h.sets);
+    const total = isPullup ? sumReps(h.sets) : 0;
     return `<div class="history-entry">
       <span class="history-date">${h.date}</span>
       <span class="history-sets">${h.sets}</span>
+      ${isPullup && total > 0 ? `<span style="font-size:11px;color:var(--muted);flex-shrink:0">${total}r</span>` : ''}
       ${canEdit ? `<button class="edit-entry-btn" onclick="openEditModal('${exId}', ${i}, event)">edit</button>` : ''}
     </div>`;
   }).join('');
@@ -1244,11 +1258,22 @@ function renderLogForm(ex) {
   for (let i = 1; i <= count; i++) rows += buildSetRow(ex, i, wLabel);
 
   html += `<div class="log-form-title">Log</div>
-    <div class="log-date-row">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
       <span class="log-date-label">Date</span>
       <input type="date" id="logdate-${ex.id}" value="${todayISO}" class="log-date-input">
-    </div>
-    <div class="sets-builder" id="sets-${ex.id}">${rows}</div>
+    </div>`;
+
+  if (ex.id.includes('pullup') || ex.id.includes('pu_')) {
+    html += `<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+      <span class="log-date-label" style="flex-shrink:0">Target reps</span>
+      <input type="number" inputmode="numeric" id="target-${ex.id}" placeholder="e.g. 30"
+        style="width:80px;background:var(--bg);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:inherit;font-size:14px;padding:6px 8px;outline:none;text-align:center"
+        oninput="updateRepTotal('${ex.id}')">
+      <span style="font-size:13px;color:var(--muted)">Total: <span id="reptotal-${ex.id}" style="color:var(--text);font-weight:600">0</span></span>
+    </div>`;
+  }
+
+  html += `<div class="sets-builder" id="sets-${ex.id}">${rows}</div>
     <div class="btn-row">
       <button class="btn btn-add-set" onclick="addSet('${ex.id}')">+ Set</button>
       <button class="btn btn-log" onclick="logExercise('${ex.id}')">Log ✓</button>
@@ -1262,7 +1287,7 @@ function buildSetRow(ex, num, wLabel) {
     const ph = ex.bwOption ? 'BW / lb' : (wLabel || 'lb');
     inputs += `<input type="text" inputmode="decimal" placeholder="${ph}" class="w-input" id="${ex.id}-w${num}">`;
     inputs += `<span class="set-label">×</span>`;
-    inputs += `<input type="number" inputmode="numeric" placeholder="reps" class="r-input" id="${ex.id}-r${num}">`;
+    inputs += `<input type="number" inputmode="numeric" placeholder="reps" class="r-input" id="${ex.id}-r${num}" oninput="updateRepTotal('${ex.id}')">`;
   } else {
     inputs += `<input type="text" placeholder="band/reps/note" class="note-input" id="${ex.id}-r${num}">`;
   }
@@ -1798,6 +1823,22 @@ async function sendProgressChat() {
   } catch(e) {
     thinkingEl.textContent = 'Error: ' + e.message;
   }
+}
+
+function updateRepTotal(exId) {
+  const rows = document.querySelectorAll(`[id^="setrow-${exId}-"]`);
+  let total = 0;
+  rows.forEach(row => {
+    const num = row.id.split('-').pop();
+    const rEl = document.getElementById(`${exId}-r${num}`);
+    if (rEl) total += parseFloat(rEl.value) || 0;
+  });
+  const totalEl = document.getElementById(`reptotal-${exId}`);
+  const targetEl = document.getElementById(`target-${exId}`);
+  if (!totalEl) return;
+  const target = targetEl ? parseFloat(targetEl.value) || 0 : 0;
+  totalEl.textContent = total;
+  totalEl.style.color = target > 0 ? (total >= target ? 'var(--accent)' : 'var(--text)') : 'var(--text)';
 }
 
 function showToast(msg) {
