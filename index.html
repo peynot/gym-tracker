@@ -369,6 +369,31 @@
   .btn-add-set { background: transparent; border: 1px solid var(--border); color: var(--muted); }
   .btn-log { background: var(--accent); color: #000; font-weight: 700; flex: 1; }
 
+  .log-date-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+  .log-date-label {
+    font-size: 12px;
+    color: var(--muted);
+    flex-shrink: 0;
+  }
+  .log-date-input {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    font-size: 13px;
+    padding: 6px 8px;
+    outline: none;
+    flex: 1;
+    color-scheme: dark;
+  }
+  .log-date-input:focus { border-color: var(--accent); }
+
   .empty { text-align: center; padding: 40px 0; color: var(--muted); font-size: 13px; font-weight: 500; }
   .toast {
     position: fixed; bottom: 24px; left: 50%;
@@ -575,18 +600,7 @@
 </header>
 
 <div class="picker-screen" id="pickerScreen">
-  <div id="debugBox" style="margin:12px 16px 0;background:#1a1a1a;border:1px solid #333;border-radius:6px;padding:10px;font-family:monospace;font-size:11px;color:#aaa;display:none;word-break:break-all">
-    <div style="display:flex;justify-content:space-between;margin-bottom:6px">
-      <span style="color:#c8f565;font-weight:700">DEBUG</span>
-      <button onclick="document.getElementById('debugBox').style.display='none'" style="background:none;border:none;color:#555;cursor:pointer;font-size:14px">✕</button>
-    </div>
-    <div id="debugLines"></div>
-  </div>
-  <div style="text-align:right;padding:6px 16px 0">
-    <button onclick="document.getElementById('debugBox').style.display='block';document.getElementById('debugLines').innerHTML='';loadFromSheets()" style="background:none;border:1px solid #333;color:#555;font-family:monospace;font-size:10px;padding:3px 8px;border-radius:3px;cursor:pointer">debug sync</button>
-  </div>
   <div class="picker-group">
-    <div class="picker-group-title">Session Weeks</div>
     <button class="workout-btn" onclick="selectWorkout('upper_a')">
       <div><div class="workout-btn-name">Upper A — Pull + Push</div><div class="workout-btn-desc">Pull-up priority · upper aesthetics</div></div>
       <div class="workout-btn-arrow">›</div>
@@ -599,19 +613,12 @@
       <div><div class="workout-btn-name">Upper B — Volume</div><div class="workout-btn-desc">OHP · rib cage · back-off pull-ups</div></div>
       <div class="workout-btn-arrow">›</div>
     </button>
+    <button class="workout-btn" onclick="selectWorkout('lower_b_travel')">
+      <div><div class="workout-btn-name">Lower B — Light + Athletic</div><div class="workout-btn-desc">KB swings · single-leg · mobility</div></div>
+      <div class="workout-btn-arrow">›</div>
+    </button>
     <button class="workout-btn" onclick="selectWorkout('pump')">
       <div><div class="workout-btn-name">Optional Pump</div><div class="workout-btn-desc">High reps · 20–30 min</div></div>
-      <div class="workout-btn-arrow">›</div>
-    </button>
-  </div>
-  <div class="picker-group">
-    <div class="picker-group-title">No Session / Travel Weeks</div>
-    <button class="workout-btn" onclick="selectWorkout('upper_b_travel')">
-      <div><div class="workout-btn-name">Upper B — Travel</div><div class="workout-btn-desc">Volume + rib cage bias</div></div>
-      <div class="workout-btn-arrow">›</div>
-    </button>
-    <button class="workout-btn" onclick="selectWorkout('lower_b_travel')">
-      <div><div class="workout-btn-name">Lower B — Travel</div><div class="workout-btn-desc">Light + athletic · 35–45 min</div></div>
       <div class="workout-btn-arrow">›</div>
     </button>
   </div>
@@ -631,6 +638,7 @@
           <button class="activity-type-btn" id="activitySurfBtn" onclick="selectActivityType('surf')">🏄 Surf</button>
           <button class="activity-type-btn" id="activitySessionBtn" onclick="selectActivityType('session')">💪 Session</button>
           <button class="activity-type-btn" id="activityRestBtn" onclick="selectActivityType('rest')">😴 Rest</button>
+          <button class="activity-type-btn" id="activitySickBtn" onclick="selectActivityType('sick')">🤒 Sick</button>
         </div>
         
         <div class="activity-form" id="surfForm">
@@ -676,8 +684,18 @@
             Click "Log ✓" to log a rest day
           </div>
         </div>
+
+        <div class="activity-form" id="sickForm">
+          <div style="padding:10px 0;text-align:center;color:var(--muted);font-size:12px">
+            Click "Log ✓" to log a sick day
+          </div>
+        </div>
         
-        <div class="btn-row" style="margin-top:12px">
+        <div class="log-date-row" style="margin-top:12px">
+          <span class="log-date-label">Date</span>
+          <input type="date" id="activityDate" class="log-date-input">
+        </div>
+        <div class="btn-row" style="margin-top:8px">
           <button class="btn btn-log" onclick="logActivity()">Log ✓</button>
         </div>
         <div class="adhoc-recent" id="adhocRecent"></div>
@@ -718,6 +736,13 @@
     <input type="password" id="apiKeyInput" class="advice-notes-input" style="height:42px;font-family:monospace;font-size:13px" placeholder="sk-ant-...">
     <div style="font-size:11px;color:var(--muted);margin:-8px 0 14px">Saved to this device only. Get yours at console.anthropic.com</div>
     <button class="advice-go-btn" onclick="saveApiKey()">Save Key</button>
+    <div style="border-top:1px solid var(--border);padding-top:14px;margin-top:4px">
+      <div class="feeling-label" style="margin-bottom:10px">Debug</div>
+      <button onclick="document.getElementById('debugBox').style.display='block';document.getElementById('debugLines').innerHTML='';loadFromSheets()" style="background:none;border:1px solid var(--border);color:var(--muted);font-family:monospace;font-size:11px;padding:6px 14px;border-radius:4px;cursor:pointer;width:100%">Run sync debug</button>
+      <div id="debugBox" style="margin-top:10px;background:#1a1a1a;border:1px solid #333;border-radius:6px;padding:10px;font-family:monospace;font-size:11px;color:#aaa;display:none;word-break:break-all;max-height:200px;overflow-y:auto">
+        <div id="debugLines"></div>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -814,40 +839,22 @@ const WORKOUTS = {
       {
         id: 'pullups', name: 'Pull-Ups', scheme: '4–6 sets · 60–70% max · 2 RIR · 2 min rest',
         weighted: true, bwOption: true,
-        history: [
-          { date: '12/22', sets: '+10lb: 4×4' },
-          { date: '12/26', sets: 'BW: 11.5/8/6/6' },
-          { date: '1/5',   sets: '+10lb: 10/10/10/10/10' },
-          { date: '1/12',  sets: 'BW: 8/8/7/6.5/5' },
-          { date: '1/19',  sets: 'BW: 8/8/7/7' },
-        ]
+        history: []
       },
       {
         id: 'incline_db', name: 'DB Incline Bench', scheme: '3×6–10',
         weighted: true,
-        history: [
-          { date: '(init)', sets: '40×10/40/40' },
-          { date: '12/26',  sets: '40×10/45×10/45×10' },
-          { date: '1/5',    sets: '50×6/50×5/45×9' },
-          { date: '1/12',   sets: '45×10×3' },
-          { date: '1/19',   sets: '40×8/40×8' },
-        ]
+        history: []
       },
       {
         id: 'cable_row', name: 'Cable Row', scheme: '3×8–12',
         weighted: true,
-        history: [
-          { date: '(init)', sets: '50×12/60×10/60×10' },
-          { date: '12/26',  sets: '45×10/45×8/52.5×8' },
-          { date: '1/5',    sets: '60×10/70×8/70×8' },
-          { date: '1/12',   sets: '70×8/70×9/70×9' },
-          { date: '1/19',   sets: 'DB Row 50×10/10' },
-        ]
+        history: []
       },
       { id: 'lat_raise_a', name: 'Lateral Raise', scheme: '4×12–20', weighted: true, history: [] },
       { id: 'rear_delt', name: 'Rear Delt Fly / Face Pull', scheme: '3×15–20', weighted: true, history: [], options: ['Rear Delt Fly', 'Face Pull'] },
       { id: 'curls', name: 'Curls', scheme: '2×10–12', weighted: true, history: [] },
-      { id: 'core_a', name: 'Core — Hanging Knee Raise / Dead Bug', scheme: '2–3 sets', weighted: false, history: [], options: ['Hanging Knee Raise', 'Dead Bug'] },
+      { id: 'core_a', name: 'Core — Hanging Knee Raise / Pallof Press', scheme: '2–3 sets', weighted: false, history: [], options: ['Hanging Knee Raise', 'Pallof Press'] },
     ]
   },
   lower_a: {
@@ -855,44 +862,28 @@ const WORKOUTS = {
     goal: 'Surf power · knee health · no burnout (~50 min)',
     exercises: [
       {
-        id: 'trap_rdl', name: 'RDL (DB or Trap Bar)', scheme: '3×3–6',
+        id: 'trap_rdl', name: 'RDL (DB or SL)', scheme: '3×3–6',
         weighted: true,
-        history: [
-          { date: '(init)', sets: '55×6' },
-          { date: '12/27',  sets: 'SL: 40×8/45×8/45×8' },
-          { date: '1/6',    sets: 'DB RDL: 50×8×3' },
-          { date: '1/13',   sets: 'DB RDL: 50×10' },
-        ]
+        history: []
       },
       {
         id: 'bss', name: 'Bulgarian Split Squat', scheme: '2–3×6–8/side',
         weighted: true,
-        history: [
-          { date: '(init)', sets: '30s' },
-          { date: '12/27',  sets: '35×6/35×8/35×8' },
-          { date: '1/6',    sets: '30×8×3' },
-          { date: '1/13',   sets: '35×8' },
-        ]
+        history: []
       },
       {
         id: 'hip_thrust_kb_swings', name: 'KB Swings OR Box Jumps', scheme: '3×8–12 (alternate each session)',
         weighted: true,
         options: ['KB Swings', 'Box Jumps'],
-        history: [
-          { date: '12/27', sets: 'KB: 45×20' },
-          { date: '1/6',   sets: 'KB: 35×20' },
-        ]
+        optionWeightLabels: { 'KB Swings': 'lb', 'Box Jumps': 'in' },
+        history: []
       },
       {
         id: 'rev_nordic_leg_lifts', name: 'Reverse Nordic + Seated Long Leg Lifts', scheme: 'Superset · 2–3 rounds',
-        weighted: false,
-        history: [
-          { date: '12/27', sets: 'RN: Med band ×8' },
-          { date: '1/6',   sets: 'RN: Pink band ×8' },
-          { date: '1/13',  sets: 'RN: Pink band ×9' },
-        ]
+        weighted: true,
+        history: []
       },
-      { id: 'calves', name: 'Calves', scheme: '2×15–20', weighted: true, history: [{ date: '(init)', sets: '30×12' }] },
+      { id: 'calves', name: 'Calves', scheme: '2×15–20', weighted: true, history: [] },
     ]
   },
   upper_b: {
@@ -902,12 +893,12 @@ const WORKOUTS = {
       {
         id: 'pullups_b', name: 'Pull-Up Variation', scheme: '1×85–90% max + 2–3 back-off ×5–6',
         weighted: true, bwOption: true,
-        history: [{ date: '2/19', sets: '8/5/5/5' }]
+        history: []
       },
       {
         id: 'ohp', name: 'OHP', scheme: '3×8–12',
         weighted: true,
-        history: [{ date: '2/19', sets: '35×8/35×10/35×10' }]
+        history: []
       },
       {
         id: 'serratus', name: 'Serratus Pullover', scheme: '3×12–15',
@@ -917,7 +908,7 @@ const WORKOUTS = {
       {
         id: 'lat_raise_b', name: 'Lateral Raise', scheme: '3×15–20',
         weighted: true,
-        history: [{ date: '2/19', sets: 'Cables 10×10' }]
+        history: []
       },
       {
         id: 'curls_b', name: 'Curls', scheme: '2×10–12',
@@ -927,7 +918,7 @@ const WORKOUTS = {
       {
         id: 'chest_press_b', name: 'Feet-Elevated Pushups / Low-Incline Press', scheme: '3×10–12',
         weighted: false,
-        history: [{ date: '2/19', sets: 'PU: 12/12/12' }]
+        history: []
       },
       { id: 'cable_chop', name: 'Cable Chop (High→Low)', scheme: '2–3×8–12/side', weighted: true, history: [] },
     ]
@@ -985,6 +976,7 @@ let editingIndex = null;
 const today = new Date();
 const todayDisplay = today.toLocaleDateString('en-US', { weekday:'short', month:'short', day:'numeric' });
 const todayShort = today.toLocaleDateString('en-US', { month:'numeric', day:'numeric', year:'2-digit' });
+const todayISO = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
 document.getElementById('headerDate').textContent = todayDisplay;
 
 const normalizeName = s => String(s).toLowerCase().replace(/[^a-z0-9 ]/g, '').replace(/\s+/g, ' ').trim();
@@ -992,6 +984,11 @@ const NAME_TO_ID = {};
 Object.values(WORKOUTS).forEach(wk => {
   wk.exercises.forEach(ex => { NAME_TO_ID[normalizeName(ex.name)] = ex.id; });
 });
+
+NAME_TO_ID['rdl db or trap bar'] = 'trap_rdl';
+NAME_TO_ID['rdl db or sl'] = 'trap_rdl';
+NAME_TO_ID['pp'] = 'core_a';
+NAME_TO_ID['pallof press'] = 'core_a';
 
 loadFromSheets();
 setTimeout(updateSettingsBtn, 0);
@@ -1214,8 +1211,15 @@ function renderLogForm(ex) {
   }
   
   let rows = '';
-  for (let i = 1; i <= count; i++) rows += buildSetRow(ex, i);
-  html += `<div class="log-form-title">Log Today</div>
+  const selectedVariant = ex.options ? (exerciseVariants[ex.id] || ex.options[0]) : null;
+  const wLabel = ex.optionWeightLabels && selectedVariant ? (ex.optionWeightLabels[selectedVariant] || 'lb') : (ex.weightLabel || 'lb');
+  for (let i = 1; i <= count; i++) rows += buildSetRow(ex, i, wLabel);
+
+  html += `<div class="log-form-title">Log</div>
+    <div class="log-date-row">
+      <span class="log-date-label">Date</span>
+      <input type="date" id="logdate-${ex.id}" value="${todayISO}" class="log-date-input">
+    </div>
     <div class="sets-builder" id="sets-${ex.id}">${rows}</div>
     <div class="btn-row">
       <button class="btn btn-add-set" onclick="addSet('${ex.id}')">+ Set</button>
@@ -1224,10 +1228,10 @@ function renderLogForm(ex) {
   return html;
 }
 
-function buildSetRow(ex, num) {
+function buildSetRow(ex, num, wLabel) {
   let inputs = '';
   if (ex.weighted) {
-    const ph = ex.bwOption ? 'BW / lb' : 'lb';
+    const ph = ex.bwOption ? 'BW / lb' : (wLabel || 'lb');
     inputs += `<input type="text" inputmode="decimal" placeholder="${ph}" class="w-input" id="${ex.id}-w${num}">`;
     inputs += `<span class="set-label">×</span>`;
     inputs += `<input type="number" inputmode="numeric" placeholder="reps" class="r-input" id="${ex.id}-r${num}">`;
@@ -1242,7 +1246,12 @@ function buildSetRow(ex, num) {
 }
 
 function toggleCard(id) {
-  openCards.has(id) ? openCards.delete(id) : openCards.add(id);
+  if (openCards.has(id)) {
+    openCards.delete(id);
+  } else {
+    openCards.clear();
+    openCards.add(id);
+  }
   renderContent();
   setTimeout(() => {
     const el = document.getElementById(`card-${id}`);
@@ -1256,8 +1265,10 @@ function addSet(exId) {
   setCounters[exId] = (setCounters[exId] || 3) + 1;
   const container = document.getElementById(`sets-${exId}`);
   if (!container) return;
+  const selectedVariant = ex.options ? (exerciseVariants[exId] || ex.options[0]) : null;
+  const wLabel = ex.optionWeightLabels && selectedVariant ? (ex.optionWeightLabels[selectedVariant] || 'lb') : 'lb';
   const div = document.createElement('div');
-  div.innerHTML = buildSetRow(ex, setCounters[exId]);
+  div.innerHTML = buildSetRow(ex, setCounters[exId], wLabel);
   container.appendChild(div.firstElementChild);
 }
 
@@ -1288,7 +1299,13 @@ function logExercise(exId) {
   if (!parts.length) { showToast('Nothing to log'); return; }
 
   const setsStr = parts.join(' / ');
-  const entry = { date: todayShort, sets: setsStr };
+
+  const rawDate = document.getElementById(`logdate-${exId}`)?.value || todayISO;
+  const d = new Date(rawDate + 'T12:00:00');
+  const isoDate = rawDate;
+  const displayDate = d.toLocaleDateString('en-US', { month:'numeric', day:'numeric', year:'2-digit' });
+
+  const entry = { date: displayDate, sets: setsStr };
 
   if (!sessionLog[exId]) sessionLog[exId] = [];
   sessionLog[exId].push(entry);
@@ -1305,13 +1322,7 @@ function logExercise(exId) {
   if (ex && ex.options && exerciseVariants[exId]) {
     exerciseName = exerciseVariants[exId];
   }
-  
-  const dateObj = new Date();
-  const year = dateObj.getFullYear();
-  const month = String(dateObj.getMonth() + 1).padStart(2, '0');
-  const day = String(dateObj.getDate()).padStart(2, '0');
-  const isoDate = `${year}-${month}-${day}`;
-  
+
   fetch(SHEET_URL, {
     method: 'POST',
     mode: 'no-cors',
@@ -1446,6 +1457,8 @@ function toggleAdhoc() {
   if (adhocOpen) {
     renderAdhocRecent();
     if (!activityType) selectActivityType('surf');
+    const el = document.getElementById('activityDate');
+    if (el && !el.value) el.value = todayISO;
   }
 }
 
@@ -1505,6 +1518,8 @@ function logActivity() {
     
   } else if (activityType === 'rest') {
     text = 'Rest day';
+  } else if (activityType === 'sick') {
+    text = 'Sick day';
   } else {
     showToast('Select activity type');
     return;
@@ -1512,11 +1527,8 @@ function logActivity() {
 
   showToast('Syncing...');
 
-  const dateObj = new Date();
-  const year = dateObj.getFullYear();
-  const month = String(dateObj.getMonth() + 1).padStart(2, '0');
-  const day = String(dateObj.getDate()).padStart(2, '0');
-  const isoDate = `${year}-${month}-${day}`;
+  const rawDate = document.getElementById('activityDate')?.value || todayISO;
+  const isoDate = rawDate;
 
   fetch(SHEET_URL, {
     method: 'POST',
@@ -1604,24 +1616,29 @@ async function getProgress() {
     logLines.push(`${e.date} | ${e.workout || ''} | ${e.exId} | ${e.sets}`);
   });
 
-  const prompt = `You are an encouraging personal trainer analyzing an athlete's training log. Your goal is to motivate and provide insights.
+  const prompt = `You are a science-based personal trainer analyzing a training log. Be direct and concise. No filler. Call out stalls honestly — don't sugarcoat, but frame constructively.
 
-CONTEXT:
-- Goal: pull-up progression + upper body aesthetics (shoulder width) + surf performance
-- Split: Upper A (pull-up heavy), Lower A (posterior chain), Upper B (volume/OHP)
-- Training age: 2-3 years
-- Current bodyweight: ~125 lbs at 5'7"
+ATHLETE:
+- 128 lbs, 5'7", AFAB not on T, 2–3 years lifting
+- Goals: transmasc aesthetics (shoulder-to-waist ratio as primary lever), surf fitness, longevity, mobility
+- Recomp phase — maintenance calories
+- Primary performance markers: pull-up progression, OHP progression, shoulder/upper back volume consistency
+- Active issue: lateral elbow tendinopathy — flag if log shows patterns that could be aggravating it
 
-RECENT LOG (last 50 entries, format: date | workout | exercise | sets):
+SPLIT:
+- Upper A: pull-up priority + push/pull
+- Lower A: posterior chain — RDL, BSS, box jumps, reverse Nordic
+- Upper B: volume — OHP, serratus pullover, rib cage work
+- Wed/Fri: group conditioning sessions
+
+RECENT LOG (last 50 entries — date | workout | exercise | sets):
 ${logLines.join('\n')}
 
-Provide a motivating progress check-in (under 200 words). Include:
-1. What's improving (be specific with numbers when possible)
-2. What stands out as a win
-3. One area with room to push harder
-4. Brief encouragement
-
-Be direct and authentic. No AI slop. If progress is slow somewhere, say it but frame constructively.`;
+Analyze and respond in under 180 words:
+1. Trend on primary markers (pull-ups, OHP) — numbers if visible
+2. Any win worth noting
+3. One honest callout — stall, gap, or risk
+4. One concrete thing to focus on next session`;
 
   try {
     if (!ANTHROPIC_API_KEY) { showToast('Add API key in settings ↗'); btn.disabled = false; btn.textContent = 'Analyze My Progress'; return; }
@@ -1677,22 +1694,30 @@ async function getAdvice() {
     logLines.push(`${e.date} | ${e.workout || ''} | ${e.exId} | ${e.sets}`);
   });
 
-  const prompt = `You are a concise, science-informed personal trainer reviewing an athlete's workout log. 
+  const prompt = `You are a science-based personal trainer. Be maximally concise. No filler. Every recommendation must be grounded in exercise science — if asked for a source you can back it up.
 
-CONTEXT:
-- Goal: pull-up progression + upper body aesthetics + surf performance
-- Split: Upper A (pull-up heavy), Lower A (posterior chain), Upper B (volume/OHP), plus surf sessions and S&C
-- Principle: autoregulate based on fatigue; 2 RIR on main lifts; posterior chain work supports surfing
+ATHLETE:
+- 128 lbs, 5'7", AFAB not on T, 2–3 years lifting
+- Goals: transmasc aesthetics (shoulder-to-waist ratio as primary lever), surf fitness, longevity, mobility
+- Recomp phase — maintenance calories, high protein priority
+- Active issue: lateral elbow tendinopathy (tennis elbow). Flares with high surf volume. Managing with eccentric protocol (Tyler twist, wrist extensions). Flag if today's workout risks aggravating it.
 
-RECENT LOG (last 40 entries, format: date | workout | exercise | sets):
+SPLIT:
+- Upper A: pull-up priority + push/pull
+- Lower A: posterior chain — RDL, BSS, box jumps, reverse Nordic
+- Upper B: volume — OHP, serratus pullover, rib cage work
+- Wed/Fri: group conditioning sessions
+- Autoregulate: 2 RIR on main lifts, 2–3 RIR accessories
+
+RECENT LOG (last 40 entries — date | workout | exercise | sets):
 ${logLines.join('\n')}
 
 TODAY:
-- How they feel: ${selectedFeeling}
-${notes ? `- Additional context: ${notes}` : ''}
-- Today's date: ${todayDisplay}
+- Feeling: ${selectedFeeling}
+${notes ? `- Context: ${notes}` : ''}
+- Date: ${todayDisplay}
 
-Based on this, give direct, grounded advice for today. Should they train? If yes, which workout and what to focus on or modify? If no, say why and when to come back. Keep it under 150 words. No fluff. Cite your reasoning briefly. If recommending rest, be direct about it.`;
+Give direct advice: train or rest, which workout, what to modify. Under 120 words. If elbow is a concern given today's plan, say so explicitly.`;
 
   try {
     if (!ANTHROPIC_API_KEY) { showToast('Add API key in settings ↗'); btn.disabled = false; btn.textContent = 'Get Advice'; return; }
