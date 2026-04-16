@@ -744,13 +744,14 @@
 </div>
 
 <div class="advice-modal-backdrop" id="adviceModal" onclick="handleAdviceBackdropClick(event)">
-  <div class="advice-modal">
-    <div class="advice-modal-title">
-      <span>Today's Advice</span>
-      <button class="advice-close" onclick="closeAdviceModal()">✕</button>
+  <div class="advice-modal" style="padding:0;display:flex;flex-direction:column;height:80vh">
+    <div style="padding:16px 16px 12px;border-bottom:1px solid var(--border);flex-shrink:0">
+      <div class="advice-modal-title" style="margin-bottom:0">
+        <span>Advice</span>
+        <button class="advice-close" onclick="closeAdviceModal()">✕</button>
+      </div>
     </div>
-
-    <div id="adviceForm">
+    <div id="adviceForm" style="padding:16px;flex-shrink:0">
       <div class="feeling-label">How are you feeling today?</div>
       <div class="feeling-options">
         <button class="feeling-btn" onclick="selectFeeling(this, 'great')">💪 Great</button>
@@ -764,26 +765,27 @@
       <textarea class="advice-notes-input" id="adviceNotes" placeholder="e.g. Slept 5hr. Left shoulder tight. Surfed yesterday 3hr."></textarea>
       <button class="advice-go-btn" id="adviceGoBtn" onclick="getAdvice()">Get Advice</button>
     </div>
-
-    <div class="advice-response" id="adviceResponse"></div>
+    <div id="adviceChat" style="display:none;flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:12px" id="adviceChatMessages"></div>
+    <div id="adviceChatInput" style="display:none;padding:12px 16px;border-top:1px solid var(--border);display:flex;gap:8px;flex-shrink:0">
+      <input type="text" id="adviceChatText" placeholder="Ask a follow-up..." style="flex:1;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:inherit;font-size:14px;padding:10px 12px;outline:none">
+      <button onclick="sendAdviceChat()" style="background:var(--accent);color:#000;border:none;border-radius:6px;padding:10px 16px;font-weight:700;font-size:14px;cursor:pointer;flex-shrink:0">Send</button>
+    </div>
   </div>
 </div>
 
 <div class="advice-modal-backdrop" id="progressModal" onclick="handleProgressBackdropClick(event)">
-  <div class="advice-modal">
-    <div class="advice-modal-title">
-      <span>Progress Check-In</span>
-      <button class="advice-close" onclick="closeProgressModal()">✕</button>
-    </div>
-
-    <div id="progressForm">
-      <div style="padding:10px 0;text-align:center;color:var(--muted);font-size:13px;line-height:1.6">
-        AI will analyze your recent training logs and give you insights + motivation.
+  <div class="advice-modal" style="padding:0;display:flex;flex-direction:column;height:80vh">
+    <div style="padding:16px 16px 12px;border-bottom:1px solid var(--border);flex-shrink:0">
+      <div class="advice-modal-title" style="margin-bottom:0">
+        <span>Progress</span>
+        <button class="advice-close" onclick="closeProgressModal()">✕</button>
       </div>
-      <button class="advice-go-btn" id="progressGoBtn" onclick="getProgress()">Analyze My Progress</button>
     </div>
-
-    <div class="advice-response" id="progressResponse"></div>
+    <div id="progressChat" style="flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:12px"></div>
+    <div style="padding:12px 16px;border-top:1px solid var(--border);display:flex;gap:8px;flex-shrink:0">
+      <input type="text" id="progressChatText" placeholder="Ask a follow-up..." style="flex:1;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:inherit;font-size:14px;padding:10px 12px;outline:none">
+      <button onclick="sendProgressChat()" style="background:var(--accent);color:#000;border:none;border-radius:6px;padding:10px 16px;font-weight:700;font-size:14px;cursor:pointer;flex-shrink:0">Send</button>
+    </div>
   </div>
 </div>
 
@@ -1034,8 +1036,12 @@ async function loadFromSheets() {
       const normedName = normalizeName(exName);
       const normedWorkout = normalizeName(workout || '');
 
+      // Direct ID match first (new schema), then fuzzy fallback (old rows)
+      const allIds = new Set(Object.values(WORKOUTS).flatMap(w => w.exercises.map(e => e.id)));
       let exId;
-      if (normedName === 'lateral raise') {
+      if (allIds.has(exName)) {
+        exId = exName;
+      } else if (normedName === 'lateral raise') {
         exId = 'lat_raise_a';
       } else if (normedName === 'curls') {
         exId = 'curls';
@@ -1340,9 +1346,9 @@ function logExercise(exId) {
   const wk = WORKOUTS[activeWorkout];
   const ex = wk.exercises.find(e => e.id === exId);
   
-  let exerciseName = ex ? ex.name : exId;
+  let exerciseName = exId;
   if (ex && ex.options && exerciseVariants[exId]) {
-    exerciseName = exerciseVariants[exId];
+    exerciseName = exId;
   }
 
   fetch(SHEET_URL, {
@@ -1582,146 +1588,19 @@ function renderAdhocRecent() {
 }
 
 let selectedFeeling = '';
+let adviceHistory = [];
+let progressHistory = [];
 
-function openAdviceModal() {
-  selectedFeeling = '';
-  document.getElementById('adviceNotes').value = '';
-  document.getElementById('adviceResponse').classList.remove('visible');
-  document.getElementById('adviceResponse').innerHTML = '';
-  document.getElementById('adviceForm').style.display = 'block';
-  document.querySelectorAll('.feeling-btn').forEach(b => b.classList.remove('selected'));
-  document.getElementById('adviceModal').classList.add('visible');
-}
-
-function closeAdviceModal() {
-  document.getElementById('adviceModal').classList.remove('visible');
-}
-
-function handleAdviceBackdropClick(e) {
-  if (e.target === document.getElementById('adviceModal')) closeAdviceModal();
-}
-
-function openProgressModal() {
-  document.getElementById('progressResponse').classList.remove('visible');
-  document.getElementById('progressResponse').innerHTML = '';
-  document.getElementById('progressForm').style.display = 'block';
-  document.getElementById('progressModal').classList.add('visible');
-}
-
-function closeProgressModal() {
-  document.getElementById('progressModal').classList.remove('visible');
-}
-
-function handleProgressBackdropClick(e) {
-  if (e.target === document.getElementById('progressModal')) closeProgressModal();
-}
-
-function selectFeeling(btn, val) {
-  selectedFeeling = val;
-  document.querySelectorAll('.feeling-btn').forEach(b => b.classList.remove('selected'));
-  btn.classList.add('selected');
-}
-
-async function getProgress() {
-  const btn = document.getElementById('progressGoBtn');
-  btn.disabled = true;
-  btn.textContent = 'Analyzing...';
-
-  const logLines = [];
+function buildLogLines(count) {
   const allEntries = [];
   Object.entries(sheetHistory).forEach(([exId, entries]) => {
     entries.forEach(e => allEntries.push({ ...e, exId }));
   });
   allEntries.sort((a, b) => new Date(a.date) - new Date(b.date));
-  const recent = allEntries.slice(-50);
-  recent.forEach(e => {
-    logLines.push(`${e.date} | ${e.workout || ''} | ${e.exId} | ${e.sets}`);
-  });
-
-  const prompt = `You are a science-based personal trainer analyzing a training log. Be direct and concise. No filler. Call out stalls honestly — don't sugarcoat, but frame constructively.
-
-ATHLETE:
-- 128 lbs, 5'7", AFAB not on T, 2–3 years lifting
-- Goals: transmasc aesthetics (shoulder-to-waist ratio as primary lever), surf fitness, longevity, mobility
-- Recomp phase — maintenance calories
-- Primary performance markers: pull-up progression, OHP progression, shoulder/upper back volume consistency
-
-SPLIT INTENT:
-- Primary aesthetic lever: lateral deltoid + upper back width (shoulder-to-waist ratio). Building outward, not leaning down further.
-- Pull-ups are the #1 strength marker — progressive overload here drives lat/bicep/upper back development
-- OHP is the #2 marker — drives shoulder width and overhead pressing strength
-- Serratus pullover + rib cage work = structural/postural investment, not just accessory filler
-- Lower A is surf-specific: posterior chain power, knee resilience, single-leg stability
-- Volume day (Upper B) = more total sets, not lower intensity — main lifts at 1–2 RIR
-
-SPLIT:
-- Upper A: pull-up priority + push/pull
-- Lower A: posterior chain — RDL, BSS, box jumps, reverse Nordic
-- Upper B: volume — OHP, serratus pullover, rib cage work
-- Wed/Fri: group conditioning sessions
-${logLines.join('\n')}
-
-Analyze and respond in under 180 words:
-1. Trend on primary markers (pull-ups, OHP) — numbers if visible
-2. Any win worth noting
-3. One honest callout — stall, gap, or risk
-4. One concrete thing to focus on next session`;
-
-  try {
-    if (!ANTHROPIC_API_KEY) { showToast('Add API key in settings ↗'); btn.disabled = false; btn.textContent = 'Analyze My Progress'; return; }
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'x-api-key': ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 500,
-        messages: [{ role: 'user', content: prompt }]
-      })
-    });
-    const data = await res.json();
-    if (data.error) {
-      document.getElementById('progressForm').style.display = 'none';
-      const respEl = document.getElementById('progressResponse');
-      respEl.textContent = 'Error: ' + data.error.message + '\n\nType: ' + data.error.type;
-      respEl.classList.add('visible');
-    } else {
-      const text = data.content?.[0]?.text || JSON.stringify(data);
-      document.getElementById('progressForm').style.display = 'none';
-      const respEl = document.getElementById('progressResponse');
-      respEl.textContent = text;
-      respEl.classList.add('visible');
-    }
-  } catch(e) {
-    document.getElementById('progressForm').style.display = 'none';
-    const respEl = document.getElementById('progressResponse');
-    respEl.textContent = 'Fetch error: ' + e.message;
-    respEl.classList.add('visible');
-  }
-
-  btn.disabled = false;
-  btn.textContent = 'Analyze My Progress';
+  return allEntries.slice(-count).map(e => `${e.date} | ${e.workout || ''} | ${e.exId} | ${e.sets}`);
 }
 
-async function getAdvice() {
-  if (!selectedFeeling) { showToast('Pick how you feel first'); return; }
-
-  const notes = document.getElementById('adviceNotes').value.trim();
-  const btn = document.getElementById('adviceGoBtn');
-  btn.disabled = true;
-  btn.textContent = 'Thinking...';
-
-  const logLines = [];
-  const allEntries = [];
-  Object.entries(sheetHistory).forEach(([exId, entries]) => {
-    entries.forEach(e => allEntries.push({ ...e, exId }));
-  });
-  allEntries.sort((a, b) => new Date(a.date) - new Date(b.date));
-  const recent = allEntries.slice(-40);
-  recent.forEach(e => {
-    logLines.push(`${e.date} | ${e.workout || ''} | ${e.exId} | ${e.sets}`);
-  });
-
-  const prompt = `You are a science-based personal trainer. Be maximally concise. No filler. Every recommendation must be grounded in exercise science — if asked for a source you can back it up.
+const ADVICE_SYSTEM = `You are a science-based personal trainer. Be maximally concise. No filler. Every recommendation must be grounded in exercise science — if asked for a source you can back it up.
 
 ATHLETE:
 - 128 lbs, 5'7", AFAB not on T, 2–3 years lifting
@@ -1742,9 +1621,86 @@ SPLIT:
 - Wed/Fri: group conditioning sessions
 
 LOGGING CONVENTIONS:
-- Pull-up entries: weight = added load (e.g. 10lb×4 = weighted pull-up with 10lb added, NOT assisted). BW = bodyweight only.
+- Pull-up entries: weight = added load (e.g. 10×4 = weighted pull-up with 10lb added, NOT assisted). BW = bodyweight only.`;
 
-RECENT LOG (last 40 entries — date | workout | exercise | sets):
+const PROGRESS_SYSTEM = `You are a science-based personal trainer analyzing a training log. Be direct and concise. No filler. Call out stalls honestly — don't sugarcoat, but frame constructively.
+
+ATHLETE:
+- 128 lbs, 5'7", AFAB not on T, 2–3 years lifting
+- Goals: transmasc aesthetics (shoulder-to-waist ratio as primary lever), surf fitness, longevity, mobility
+- Recomp phase — maintenance calories
+- Primary performance markers: pull-up progression, OHP progression, shoulder/upper back volume consistency
+
+SPLIT INTENT:
+- Primary aesthetic lever: lateral deltoid + upper back width (shoulder-to-waist ratio). Building outward, not leaning down further.
+- Pull-ups are the #1 strength marker — progressive overload here drives lat/bicep/upper back development
+- OHP is the #2 marker — drives shoulder width and overhead pressing strength
+- Serratus pullover + rib cage work = structural/postural investment, not just accessory filler
+- Lower A is surf-specific: posterior chain power, knee resilience, single-leg stability
+- Volume day (Upper B) = more total sets, not lower intensity — main lifts at 1–2 RIR
+
+LOGGING CONVENTIONS:
+- Pull-up entries: weight = added load (e.g. 10×4 = weighted pull-up with 10lb added, NOT assisted). BW = bodyweight only.`;
+
+function appendChatMsg(containerId, role, text) {
+  const container = document.getElementById(containerId);
+  const div = document.createElement('div');
+  div.style.cssText = role === 'user'
+    ? 'align-self:flex-end;background:var(--surface);border:1px solid var(--border);border-radius:10px 10px 2px 10px;padding:10px 14px;max-width:85%;font-size:14px;color:var(--text);white-space:pre-wrap;'
+    : 'align-self:flex-start;background:rgba(200,245,101,0.06);border:1px solid rgba(200,245,101,0.15);border-radius:10px 10px 10px 2px;padding:10px 14px;max-width:95%;font-size:14px;color:var(--text);white-space:pre-wrap;line-height:1.6;';
+  div.textContent = text;
+  container.appendChild(div);
+  container.scrollTop = container.scrollHeight;
+  return div;
+}
+
+async function callClaude(system, messages, maxTokens) {
+  if (!ANTHROPIC_API_KEY) { showToast('Add API key in settings ↗'); return null; }
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'x-api-key': ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
+    body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: maxTokens, system, messages })
+  });
+  const data = await res.json();
+  if (data.error) throw new Error(data.error.message);
+  return data.content?.[0]?.text || '';
+}
+
+// ADVICE
+function openAdviceModal() {
+  selectedFeeling = '';
+  adviceHistory = [];
+  document.getElementById('adviceNotes').value = '';
+  document.getElementById('adviceForm').style.display = 'block';
+  document.getElementById('adviceChat').style.display = 'none';
+  document.getElementById('adviceChatInput').style.display = 'none';
+  document.getElementById('adviceChat').innerHTML = '';
+  document.querySelectorAll('.feeling-btn').forEach(b => b.classList.remove('selected'));
+  document.getElementById('adviceModal').classList.add('visible');
+}
+
+function closeAdviceModal() {
+  document.getElementById('adviceModal').classList.remove('visible');
+}
+
+function handleAdviceBackdropClick(e) {
+  if (e.target === document.getElementById('adviceModal')) closeAdviceModal();
+}
+
+function selectFeeling(btn, val) {
+  selectedFeeling = val;
+  document.querySelectorAll('.feeling-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+}
+
+async function getAdvice() {
+  if (!selectedFeeling) { showToast('Pick how you feel first'); return; }
+  const notes = document.getElementById('adviceNotes').value.trim();
+  const btn = document.getElementById('adviceGoBtn');
+  btn.disabled = true; btn.textContent = 'Thinking...';
+
+  const logLines = buildLogLines(40);
+  const firstMsg = `RECENT LOG (last 40 entries — date | workout | exercise | sets):
 ${logLines.join('\n')}
 
 TODAY:
@@ -1754,39 +1710,94 @@ ${notes ? `- Context: ${notes}` : ''}
 
 Give direct advice: train or rest, which workout, what to modify. Under 120 words.`;
 
-  try {
-    if (!ANTHROPIC_API_KEY) { showToast('Add API key in settings ↗'); btn.disabled = false; btn.textContent = 'Get Advice'; return; }
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'x-api-key': ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 400,
-        messages: [{ role: 'user', content: prompt }]
-      })
-    });
-    const data = await res.json();
-    if (data.error) {
-      document.getElementById('adviceForm').style.display = 'none';
-      const respEl = document.getElementById('adviceResponse');
-      respEl.textContent = 'Error: ' + data.error.message + '\n\nType: ' + data.error.type;
-      respEl.classList.add('visible');
-    } else {
-      const text = data.content?.[0]?.text || JSON.stringify(data);
-      document.getElementById('adviceForm').style.display = 'none';
-      const respEl = document.getElementById('adviceResponse');
-      respEl.textContent = text;
-      respEl.classList.add('visible');
-    }
-  } catch(e) {
-    document.getElementById('adviceForm').style.display = 'none';
-    const respEl = document.getElementById('adviceResponse');
-    respEl.textContent = 'Fetch error: ' + e.message;
-    respEl.classList.add('visible');
-  }
+  adviceHistory = [{ role: 'user', content: firstMsg }];
 
-  btn.disabled = false;
-  btn.textContent = 'Get Advice';
+  document.getElementById('adviceForm').style.display = 'none';
+  document.getElementById('adviceChat').style.display = 'flex';
+  document.getElementById('adviceChatInput').style.display = 'flex';
+  document.getElementById('adviceChat').innerHTML = '';
+
+  const thinkingEl = appendChatMsg('adviceChat', 'assistant', '...');
+  try {
+    const reply = await callClaude(ADVICE_SYSTEM, adviceHistory, 500);
+    thinkingEl.textContent = reply;
+    adviceHistory.push({ role: 'assistant', content: reply });
+  } catch(e) {
+    thinkingEl.textContent = 'Error: ' + e.message;
+  }
+  btn.disabled = false; btn.textContent = 'Get Advice';
+}
+
+async function sendAdviceChat() {
+  const input = document.getElementById('adviceChatText');
+  const text = input.value.trim();
+  if (!text) return;
+  input.value = '';
+  appendChatMsg('adviceChat', 'user', text);
+  adviceHistory.push({ role: 'user', content: text });
+  const thinkingEl = appendChatMsg('adviceChat', 'assistant', '...');
+  try {
+    const reply = await callClaude(ADVICE_SYSTEM, adviceHistory, 500);
+    thinkingEl.textContent = reply;
+    adviceHistory.push({ role: 'assistant', content: reply });
+  } catch(e) {
+    thinkingEl.textContent = 'Error: ' + e.message;
+  }
+}
+
+// PROGRESS
+function openProgressModal() {
+  progressHistory = [];
+  document.getElementById('progressChat').innerHTML = '';
+  document.getElementById('progressModal').classList.add('visible');
+  getProgress();
+}
+
+function closeProgressModal() {
+  document.getElementById('progressModal').classList.remove('visible');
+}
+
+function handleProgressBackdropClick(e) {
+  if (e.target === document.getElementById('progressModal')) closeProgressModal();
+}
+
+async function getProgress() {
+  const logLines = buildLogLines(50);
+  const firstMsg = `RECENT LOG (last 50 entries — date | workout | exercise | sets):
+${logLines.join('\n')}
+
+Analyze and respond in under 180 words:
+1. Trend on primary markers (pull-ups, OHP) — numbers if visible
+2. Any win worth noting
+3. One honest callout — stall, gap, or risk
+4. One concrete thing to focus on next session`;
+
+  progressHistory = [{ role: 'user', content: firstMsg }];
+  const thinkingEl = appendChatMsg('progressChat', 'assistant', '...');
+  try {
+    const reply = await callClaude(PROGRESS_SYSTEM, progressHistory, 600);
+    thinkingEl.textContent = reply;
+    progressHistory.push({ role: 'assistant', content: reply });
+  } catch(e) {
+    thinkingEl.textContent = 'Error: ' + e.message;
+  }
+}
+
+async function sendProgressChat() {
+  const input = document.getElementById('progressChatText');
+  const text = input.value.trim();
+  if (!text) return;
+  input.value = '';
+  appendChatMsg('progressChat', 'user', text);
+  progressHistory.push({ role: 'user', content: text });
+  const thinkingEl = appendChatMsg('progressChat', 'assistant', '...');
+  try {
+    const reply = await callClaude(PROGRESS_SYSTEM, progressHistory, 600);
+    thinkingEl.textContent = reply;
+    progressHistory.push({ role: 'assistant', content: reply });
+  } catch(e) {
+    thinkingEl.textContent = 'Error: ' + e.message;
+  }
 }
 
 function showToast(msg) {
