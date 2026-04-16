@@ -702,23 +702,8 @@
       </div>
     </div>
 
-    <div style="display:flex;gap:6px;margin-top:2px">
-      <button class="advice-btn" style="margin-bottom:0" onclick="openAdviceModal()">
-        <div class="advice-btn-left">
-          <div>
-            <div class="advice-btn-name">Advice</div>
-            <div class="advice-btn-desc">Today's training rec</div>
-          </div>
-        </div>
-      </button>
-      <button class="advice-btn" style="margin-bottom:0" onclick="openProgressModal()">
-        <div class="advice-btn-left">
-          <div>
-            <div class="advice-btn-name">Progress</div>
-            <div class="advice-btn-desc">Recent log insights</div>
-          </div>
-        </div>
-      </button>
+    <div style="display:flex;justify-content:center;padding:12px 0 4px">
+      <button onclick="openCoachModal()" style="width:56px;height:56px;border-radius:50%;background:var(--accent);border:none;cursor:pointer;font-size:22px;display:flex;align-items:center;justify-content:center;flex-shrink:0">◈</button>
     </div>
   </div>
 </div>
@@ -743,48 +728,20 @@
   </div>
 </div>
 
-<div class="advice-modal-backdrop" id="adviceModal" onclick="handleAdviceBackdropClick(event)">
+<div class="advice-modal-backdrop" id="coachModal" onclick="handleCoachBackdropClick(event)">
   <div class="advice-modal" style="padding:0;display:flex;flex-direction:column;height:80vh">
-    <div style="padding:16px 16px 12px;border-bottom:1px solid var(--border);flex-shrink:0">
-      <div class="advice-modal-title" style="margin-bottom:0">
-        <span>Advice</span>
-        <button class="advice-close" onclick="closeAdviceModal()">✕</button>
-      </div>
+    <div style="padding:14px 16px 12px;border-bottom:1px solid var(--border);flex-shrink:0;display:flex;justify-content:space-between;align-items:center">
+      <div style="font-size:12px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--accent)">Coach</div>
+      <button class="advice-close" onclick="closeCoachModal()">✕</button>
     </div>
-    <div id="adviceForm" style="padding:16px;flex-shrink:0">
-      <div class="feeling-label">How are you feeling today?</div>
-      <div class="feeling-options">
-        <button class="feeling-btn" onclick="selectFeeling(this, 'great')">💪 Great</button>
-        <button class="feeling-btn" onclick="selectFeeling(this, 'good')">🙂 Good</button>
-        <button class="feeling-btn" onclick="selectFeeling(this, 'ok')">😐 OK</button>
-        <button class="feeling-btn" onclick="selectFeeling(this, 'tired')">😴 Tired</button>
-        <button class="feeling-btn" onclick="selectFeeling(this, 'sore')">🤕 Sore</button>
-        <button class="feeling-btn" onclick="selectFeeling(this, 'rough')">😮‍💨 Rough</button>
-      </div>
-      <div class="feeling-label">Anything else? (optional)</div>
-      <textarea class="advice-notes-input" id="adviceNotes" placeholder="e.g. Slept 5hr. Left shoulder tight. Surfed yesterday 3hr."></textarea>
-      <button class="advice-go-btn" id="adviceGoBtn" onclick="getAdvice()">Get Advice</button>
+    <div id="coachChat" style="flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:12px"></div>
+    <div id="coachStarters" style="padding:12px 16px;border-top:1px solid var(--border);display:flex;gap:8px;flex-shrink:0">
+      <button onclick="startCoach('advice')" style="flex:1;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:12px;cursor:pointer;color:var(--text);font-family:inherit;font-size:14px;font-weight:600">Advice</button>
+      <button onclick="startCoach('progress')" style="flex:1;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:12px;cursor:pointer;color:var(--text);font-family:inherit;font-size:14px;font-weight:600">Progress</button>
     </div>
-    <div id="adviceChat" style="display:none;flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:12px" id="adviceChatMessages"></div>
-    <div id="adviceChatInput" style="display:none;padding:12px 16px;border-top:1px solid var(--border);display:flex;gap:8px;flex-shrink:0">
-      <input type="text" id="adviceChatText" placeholder="Ask a follow-up..." style="flex:1;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:inherit;font-size:14px;padding:10px 12px;outline:none">
-      <button onclick="sendAdviceChat()" style="background:var(--accent);color:#000;border:none;border-radius:6px;padding:10px 16px;font-weight:700;font-size:14px;cursor:pointer;flex-shrink:0">Send</button>
-    </div>
-  </div>
-</div>
-
-<div class="advice-modal-backdrop" id="progressModal" onclick="handleProgressBackdropClick(event)">
-  <div class="advice-modal" style="padding:0;display:flex;flex-direction:column;height:80vh">
-    <div style="padding:16px 16px 12px;border-bottom:1px solid var(--border);flex-shrink:0">
-      <div class="advice-modal-title" style="margin-bottom:0">
-        <span>Progress</span>
-        <button class="advice-close" onclick="closeProgressModal()">✕</button>
-      </div>
-    </div>
-    <div id="progressChat" style="flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:12px"></div>
-    <div style="padding:12px 16px;border-top:1px solid var(--border);display:flex;gap:8px;flex-shrink:0">
-      <input type="text" id="progressChatText" placeholder="Ask a follow-up..." style="flex:1;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:inherit;font-size:14px;padding:10px 12px;outline:none">
-      <button onclick="sendProgressChat()" style="background:var(--accent);color:#000;border:none;border-radius:6px;padding:10px 16px;font-weight:700;font-size:14px;cursor:pointer;flex-shrink:0">Send</button>
+    <div id="coachInput" style="display:none;padding:12px 16px;border-top:1px solid var(--border);display:flex;gap:8px;flex-shrink:0">
+      <input type="text" id="coachText" placeholder="Ask a follow-up..." style="flex:1;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:inherit;font-size:14px;padding:10px 12px;outline:none">
+      <button onclick="sendCoachChat()" style="background:var(--accent);color:#000;border:none;border-radius:6px;padding:10px 16px;font-weight:700;font-size:14px;cursor:pointer;flex-shrink:0">Send</button>
     </div>
   </div>
 </div>
@@ -917,6 +874,8 @@ const WORKOUTS = {
       {
         id: 'chest_press_b', name: 'Feet-Elevated Pushups / Low-Incline Press', scheme: '3×10–12',
         weighted: false,
+        options: ['Feet-Elevated Pushups', 'Low-Incline Press'],
+        optionWeighted: { 'Feet-Elevated Pushups': false, 'Low-Incline Press': true },
         history: []
       },
       { id: 'cable_chop', name: 'Cable Chop (High→Low)', scheme: '2–3×8–12/side', weighted: true, history: [] },
@@ -1254,8 +1213,9 @@ function renderLogForm(ex) {
   
   let rows = '';
   const selectedVariant = ex.options ? (exerciseVariants[ex.id] || ex.options[0]) : null;
+  const isWeighted = ex.optionWeighted && selectedVariant ? ex.optionWeighted[selectedVariant] : ex.weighted;
   const wLabel = ex.optionWeightLabels && selectedVariant ? (ex.optionWeightLabels[selectedVariant] || 'lb') : (ex.weightLabel || 'lb');
-  for (let i = 1; i <= count; i++) rows += buildSetRow(ex, i, wLabel);
+  for (let i = 1; i <= count; i++) rows += buildSetRow(ex, i, wLabel, isWeighted);
 
   html += `<div class="log-form-title">Log</div>
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
@@ -1281,9 +1241,10 @@ function renderLogForm(ex) {
   return html;
 }
 
-function buildSetRow(ex, num, wLabel) {
+function buildSetRow(ex, num, wLabel, isWeighted) {
+  const weighted = isWeighted !== undefined ? isWeighted : ex.weighted;
   let inputs = '';
-  if (ex.weighted) {
+  if (weighted) {
     const ph = ex.bwOption ? 'BW / lb' : (wLabel || 'lb');
     inputs += `<input type="text" inputmode="decimal" placeholder="${ph}" class="w-input" id="${ex.id}-w${num}">`;
     inputs += `<span class="set-label">×</span>`;
@@ -1319,9 +1280,10 @@ function addSet(exId) {
   const container = document.getElementById(`sets-${exId}`);
   if (!container) return;
   const selectedVariant = ex.options ? (exerciseVariants[exId] || ex.options[0]) : null;
+  const isWeighted = ex.optionWeighted && selectedVariant ? ex.optionWeighted[selectedVariant] : ex.weighted;
   const wLabel = ex.optionWeightLabels && selectedVariant ? (ex.optionWeightLabels[selectedVariant] || 'lb') : 'lb';
   const div = document.createElement('div');
-  div.innerHTML = buildSetRow(ex, setCounters[exId], wLabel);
+  div.innerHTML = buildSetRow(ex, setCounters[exId], wLabel, isWeighted);
   container.appendChild(div.firstElementChild);
 }
 
@@ -1613,8 +1575,8 @@ function renderAdhocRecent() {
 }
 
 let selectedFeeling = '';
-let adviceHistory = [];
-let progressHistory = [];
+let coachHistory = [];
+let coachSystem = '';
 
 function buildLogLines(count) {
   const allEntries = [];
@@ -1667,8 +1629,8 @@ SPLIT INTENT:
 LOGGING CONVENTIONS:
 - Pull-up entries: weight = added load (e.g. 10×4 = weighted pull-up with 10lb added, NOT assisted). BW = bodyweight only.`;
 
-function appendChatMsg(containerId, role, text) {
-  const container = document.getElementById(containerId);
+function appendChatMsg(role, text) {
+  const container = document.getElementById('coachChat');
   const div = document.createElement('div');
   div.style.cssText = role === 'user'
     ? 'align-self:flex-end;background:var(--surface);border:1px solid var(--border);border-radius:10px 10px 2px 10px;padding:10px 14px;max-width:85%;font-size:14px;color:var(--text);white-space:pre-wrap;'
@@ -1691,25 +1653,57 @@ async function callClaude(system, messages, maxTokens) {
   return data.content?.[0]?.text || '';
 }
 
-// ADVICE
-function openAdviceModal() {
-  selectedFeeling = '';
-  adviceHistory = [];
-  document.getElementById('adviceNotes').value = '';
-  document.getElementById('adviceForm').style.display = 'block';
-  document.getElementById('adviceChat').style.display = 'none';
-  document.getElementById('adviceChatInput').style.display = 'none';
-  document.getElementById('adviceChat').innerHTML = '';
-  document.querySelectorAll('.feeling-btn').forEach(b => b.classList.remove('selected'));
-  document.getElementById('adviceModal').classList.add('visible');
+function openCoachModal() {
+  coachHistory = [];
+  coachSystem = '';
+  document.getElementById('coachChat').innerHTML = '';
+  document.getElementById('coachStarters').style.display = 'flex';
+  document.getElementById('coachInput').style.display = 'none';
+  document.getElementById('coachModal').classList.add('visible');
 }
 
-function closeAdviceModal() {
-  document.getElementById('adviceModal').classList.remove('visible');
+function closeCoachModal() {
+  document.getElementById('coachModal').classList.remove('visible');
 }
 
-function handleAdviceBackdropClick(e) {
-  if (e.target === document.getElementById('adviceModal')) closeAdviceModal();
+function handleCoachBackdropClick(e) {
+  if (e.target === document.getElementById('coachModal')) closeCoachModal();
+}
+
+async function startCoach(type) {
+  document.getElementById('coachStarters').style.display = 'none';
+  document.getElementById('coachInput').style.display = 'flex';
+
+  if (type === 'advice') {
+    coachSystem = ADVICE_SYSTEM;
+    // Show feeling selector inline
+    const form = document.createElement('div');
+    form.style.cssText = 'padding:4px 0 8px;';
+    form.innerHTML = `
+      <div class="feeling-label" style="margin-bottom:8px">How are you feeling today?</div>
+      <div class="feeling-options" style="margin-bottom:12px">
+        <button class="feeling-btn" onclick="selectFeeling(this,'great')">💪 Great</button>
+        <button class="feeling-btn" onclick="selectFeeling(this,'good')">🙂 Good</button>
+        <button class="feeling-btn" onclick="selectFeeling(this,'ok')">😐 OK</button>
+        <button class="feeling-btn" onclick="selectFeeling(this,'tired')">😴 Tired</button>
+        <button class="feeling-btn" onclick="selectFeeling(this,'sore')">🤕 Sore</button>
+        <button class="feeling-btn" onclick="selectFeeling(this,'rough')">😮‍💨 Rough</button>
+      </div>
+      <textarea class="advice-notes-input" id="coachAdviceNotes" placeholder="Anything else? (optional)" style="margin-bottom:10px;height:52px"></textarea>
+      <button onclick="submitAdvice()" class="advice-go-btn" style="margin-bottom:0">Get Advice</button>`;
+    document.getElementById('coachChat').appendChild(form);
+  } else {
+    coachSystem = PROGRESS_SYSTEM;
+    const logLines = buildLogLines(50);
+    const firstMsg = `RECENT LOG (last 50 entries — date | workout | exercise | sets):\n${logLines.join('\n')}\n\nAnalyze and respond in under 180 words:\n1. Trend on primary markers (pull-ups, OHP) — numbers if visible\n2. Any win worth noting\n3. One honest callout — stall, gap, or risk\n4. One concrete thing to focus on next session`;
+    coachHistory = [{ role: 'user', content: firstMsg }];
+    const el = appendChatMsg('assistant', '...');
+    try {
+      const reply = await callClaude(PROGRESS_SYSTEM, coachHistory, 600);
+      el.textContent = reply;
+      coachHistory.push({ role: 'assistant', content: reply });
+    } catch(e) { el.textContent = 'Error: ' + e.message; }
+  }
 }
 
 function selectFeeling(btn, val) {
@@ -1718,111 +1712,36 @@ function selectFeeling(btn, val) {
   btn.classList.add('selected');
 }
 
-async function getAdvice() {
+async function submitAdvice() {
   if (!selectedFeeling) { showToast('Pick how you feel first'); return; }
-  const notes = document.getElementById('adviceNotes').value.trim();
-  const btn = document.getElementById('adviceGoBtn');
-  btn.disabled = true; btn.textContent = 'Thinking...';
-
+  const notes = document.getElementById('coachAdviceNotes')?.value.trim() || '';
+  // Remove the form
+  const chat = document.getElementById('coachChat');
+  chat.innerHTML = '';
   const logLines = buildLogLines(40);
-  const firstMsg = `RECENT LOG (last 40 entries — date | workout | exercise | sets):
-${logLines.join('\n')}
-
-TODAY:
-- Feeling: ${selectedFeeling}
-${notes ? `- Context: ${notes}` : ''}
-- Date: ${todayDisplay}
-
-Give direct advice: train or rest, which workout, what to modify. Under 120 words.`;
-
-  adviceHistory = [{ role: 'user', content: firstMsg }];
-
-  document.getElementById('adviceForm').style.display = 'none';
-  document.getElementById('adviceChat').style.display = 'flex';
-  document.getElementById('adviceChatInput').style.display = 'flex';
-  document.getElementById('adviceChat').innerHTML = '';
-
-  const thinkingEl = appendChatMsg('adviceChat', 'assistant', '...');
+  const firstMsg = `RECENT LOG (last 40 entries — date | workout | exercise | sets):\n${logLines.join('\n')}\n\nTODAY:\n- Feeling: ${selectedFeeling}\n${notes ? `- Context: ${notes}\n` : ''}- Date: ${todayDisplay}\n\nGive direct advice: train or rest, which workout, what to modify. Under 120 words.`;
+  coachHistory = [{ role: 'user', content: firstMsg }];
+  const el = appendChatMsg('assistant', '...');
   try {
-    const reply = await callClaude(ADVICE_SYSTEM, adviceHistory, 500);
-    thinkingEl.textContent = reply;
-    adviceHistory.push({ role: 'assistant', content: reply });
-  } catch(e) {
-    thinkingEl.textContent = 'Error: ' + e.message;
-  }
-  btn.disabled = false; btn.textContent = 'Get Advice';
+    const reply = await callClaude(ADVICE_SYSTEM, coachHistory, 500);
+    el.textContent = reply;
+    coachHistory.push({ role: 'assistant', content: reply });
+  } catch(e) { el.textContent = 'Error: ' + e.message; }
 }
 
-async function sendAdviceChat() {
-  const input = document.getElementById('adviceChatText');
+async function sendCoachChat() {
+  const input = document.getElementById('coachText');
   const text = input.value.trim();
-  if (!text) return;
+  if (!text || !coachSystem) return;
   input.value = '';
-  appendChatMsg('adviceChat', 'user', text);
-  adviceHistory.push({ role: 'user', content: text });
-  const thinkingEl = appendChatMsg('adviceChat', 'assistant', '...');
+  appendChatMsg('user', text);
+  coachHistory.push({ role: 'user', content: text });
+  const el = appendChatMsg('assistant', '...');
   try {
-    const reply = await callClaude(ADVICE_SYSTEM, adviceHistory, 500);
-    thinkingEl.textContent = reply;
-    adviceHistory.push({ role: 'assistant', content: reply });
-  } catch(e) {
-    thinkingEl.textContent = 'Error: ' + e.message;
-  }
-}
-
-// PROGRESS
-function openProgressModal() {
-  progressHistory = [];
-  document.getElementById('progressChat').innerHTML = '';
-  document.getElementById('progressModal').classList.add('visible');
-  getProgress();
-}
-
-function closeProgressModal() {
-  document.getElementById('progressModal').classList.remove('visible');
-}
-
-function handleProgressBackdropClick(e) {
-  if (e.target === document.getElementById('progressModal')) closeProgressModal();
-}
-
-async function getProgress() {
-  const logLines = buildLogLines(50);
-  const firstMsg = `RECENT LOG (last 50 entries — date | workout | exercise | sets):
-${logLines.join('\n')}
-
-Analyze and respond in under 180 words:
-1. Trend on primary markers (pull-ups, OHP) — numbers if visible
-2. Any win worth noting
-3. One honest callout — stall, gap, or risk
-4. One concrete thing to focus on next session`;
-
-  progressHistory = [{ role: 'user', content: firstMsg }];
-  const thinkingEl = appendChatMsg('progressChat', 'assistant', '...');
-  try {
-    const reply = await callClaude(PROGRESS_SYSTEM, progressHistory, 600);
-    thinkingEl.textContent = reply;
-    progressHistory.push({ role: 'assistant', content: reply });
-  } catch(e) {
-    thinkingEl.textContent = 'Error: ' + e.message;
-  }
-}
-
-async function sendProgressChat() {
-  const input = document.getElementById('progressChatText');
-  const text = input.value.trim();
-  if (!text) return;
-  input.value = '';
-  appendChatMsg('progressChat', 'user', text);
-  progressHistory.push({ role: 'user', content: text });
-  const thinkingEl = appendChatMsg('progressChat', 'assistant', '...');
-  try {
-    const reply = await callClaude(PROGRESS_SYSTEM, progressHistory, 600);
-    thinkingEl.textContent = reply;
-    progressHistory.push({ role: 'assistant', content: reply });
-  } catch(e) {
-    thinkingEl.textContent = 'Error: ' + e.message;
-  }
+    const reply = await callClaude(coachSystem, coachHistory, 600);
+    el.textContent = reply;
+    coachHistory.push({ role: 'assistant', content: reply });
+  } catch(e) { el.textContent = 'Error: ' + e.message; }
 }
 
 function updateRepTotal(exId) {
