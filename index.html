@@ -989,6 +989,11 @@ NAME_TO_ID['rdl db or trap bar'] = 'trap_rdl';
 NAME_TO_ID['rdl db or sl'] = 'trap_rdl';
 NAME_TO_ID['pp'] = 'core_a';
 NAME_TO_ID['pallof press'] = 'core_a';
+NAME_TO_ID['pull up variation'] = 'pullups_b';
+NAME_TO_ID['pullup variation'] = 'pullups_b';
+NAME_TO_ID['serratus pullover'] = 'serratus';
+NAME_TO_ID['cable chop highlow'] = 'cable_chop';
+NAME_TO_ID['cable chop'] = 'cable_chop';
 
 loadFromSheets();
 setTimeout(updateSettingsBtn, 0);
@@ -1030,11 +1035,24 @@ async function loadFromSheets() {
       } catch(e) { date = String(rawDate); }
 
       const normedName = normalizeName(exName);
-      const exId = NAME_TO_ID[normedName] || (() => {
-        return Object.keys(NAME_TO_ID).find(k => normedName.includes(k) || k.includes(normedName))
-               ? NAME_TO_ID[Object.keys(NAME_TO_ID).find(k => normedName.includes(k) || k.includes(normedName))]
-               : exName;
-      })();
+      const normedWorkout = normalizeName(workout || '');
+
+      let exId;
+      if (normedName === 'lateral raise') {
+        exId = 'lat_raise_a';
+      } else if (normedName === 'curls') {
+        exId = 'curls';
+      } else if (normedName === 'pull up variation' || normedName === 'pullup variation') {
+        if (normedWorkout.includes('upper b') || normedWorkout.includes('volume')) exId = 'pullups_b';
+        else if (normedWorkout.includes('pump')) exId = 'pu_pump';
+        else exId = 'pullups';
+      } else {
+        exId = NAME_TO_ID[normedName] || (() => {
+          return Object.keys(NAME_TO_ID).find(k => normedName.includes(k) || k.includes(normedName))
+                 ? NAME_TO_ID[Object.keys(NAME_TO_ID).find(k => normedName.includes(k) || k.includes(normedName))]
+                 : exName;
+        })();
+      }
 
       if (!sheetHistory[exId]) sheetHistory[exId] = [];
       sheetHistory[exId].push({ date, sets: String(sets), workout, sheetRow: i + 1 });
@@ -1148,12 +1166,19 @@ function toggleWarmupItem(index) {
 }
 
 function getAllHistory(ex) {
-  const fromSheet = sheetHistory[ex.id] || [];
+  let ids = [ex.id];
+  if (['lat_raise_a', 'lat_raise_b', 'lat_raise_pump'].includes(ex.id)) {
+    ids = ['lat_raise_a', 'lat_raise_b', 'lat_raise_pump'];
+  } else if (['curls', 'curls_b', 'curls_pump'].includes(ex.id)) {
+    ids = ['curls', 'curls_b', 'curls_pump'];
+  }
+
+  const fromSheet = ids.flatMap(id => sheetHistory[id] || []);
   const base = fromSheet.length > 0 ? fromSheet : ex.history;
-  const local = (sessionLog[ex.id] || []).filter(l =>
+  const local = ids.flatMap(id => sessionLog[id] || []).filter(l =>
     !fromSheet.some(s => s.date === l.date && s.sets === l.sets)
   );
-  return [...base, ...local];
+  return [...base, ...local].sort((a, b) => new Date(a.date) - new Date(b.date));
 }
 
 function renderHistory(hist, exId) {
@@ -1623,7 +1648,6 @@ ATHLETE:
 - Goals: transmasc aesthetics (shoulder-to-waist ratio as primary lever), surf fitness, longevity, mobility
 - Recomp phase — maintenance calories
 - Primary performance markers: pull-up progression, OHP progression, shoulder/upper back volume consistency
-- Active issue: lateral elbow tendinopathy — flag if log shows patterns that could be aggravating it
 
 SPLIT:
 - Upper A: pull-up priority + push/pull
@@ -1700,7 +1724,6 @@ ATHLETE:
 - 128 lbs, 5'7", AFAB not on T, 2–3 years lifting
 - Goals: transmasc aesthetics (shoulder-to-waist ratio as primary lever), surf fitness, longevity, mobility
 - Recomp phase — maintenance calories, high protein priority
-- Active issue: lateral elbow tendinopathy (tennis elbow). Flares with high surf volume. Managing with eccentric protocol (Tyler twist, wrist extensions). Flag if today's workout risks aggravating it.
 
 SPLIT:
 - Upper A: pull-up priority + push/pull
@@ -1717,7 +1740,7 @@ TODAY:
 ${notes ? `- Context: ${notes}` : ''}
 - Date: ${todayDisplay}
 
-Give direct advice: train or rest, which workout, what to modify. Under 120 words. If elbow is a concern given today's plan, say so explicitly.`;
+Give direct advice: train or rest, which workout, what to modify. Under 120 words.`;
 
   try {
     if (!ANTHROPIC_API_KEY) { showToast('Add API key in settings ↗'); btn.disabled = false; btn.textContent = 'Get Advice'; return; }
