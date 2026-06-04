@@ -566,6 +566,15 @@ async function loadFromSheets() {
       const [rawDate, workout, rawExId, sets] = rows[i];
       if (!rawExId || !sets) continue;
 
+      // Handle activity notes directly
+      if (rawExId === 'Note') {
+        if (!sheetHistory['Note']) sheetHistory['Note'] = [];
+        let rawDateISO = '';
+        try { const d2=new Date(rawDate); rawDateISO=!isNaN(d2)?fmtISO(d2):''; } catch(e) {}
+        sheetHistory['Note'].push({ date, sets:String(sets), workout, sheetRow:i+1, rawDate:rawDateISO||rawDate });
+        continue;
+      }
+
       // Resolve ID
       let exId = rawExId;
       if (!allIds.has(exId)) {
