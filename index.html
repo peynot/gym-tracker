@@ -571,7 +571,9 @@ async function loadFromSheets() {
         if (!sheetHistory['Note']) sheetHistory['Note'] = [];
         let rawDateISO = '';
         try { const d2=new Date(rawDate); rawDateISO=!isNaN(d2)?fmtISO(d2):''; } catch(e) {}
-        sheetHistory['Note'].push({ date, sets:String(sets), workout, sheetRow:i+1, rawDate:rawDateISO||rawDate });
+        let noteDate;
+        try { const d2=new Date(rawDate); noteDate=!isNaN(d2)?d2.toLocaleDateString('en-US',{month:'numeric',day:'numeric',year:'2-digit'}):String(rawDate); } catch(e) { noteDate=String(rawDate); }
+        sheetHistory['Note'].push({ date:noteDate, sets:String(sets), workout, sheetRow:i+1, rawDate:rawDateISO||rawDate });
         continue;
       }
 
