@@ -405,7 +405,7 @@ body {
     </div>
 
     <!-- Activity -->
-    <div class="section">
+    <div class="section" style="padding-bottom:28px">>
       <div class="section-title">Activity</div>
       <div class="act-grid">
         <button class="act-btn" onclick="logQuickActivity('surf')"><span class="act-icon">🏄</span> Surf</button>
@@ -417,7 +417,7 @@ body {
   </div>
 
   <!-- workout view -->
-  <div id="wk-view" style="display:none">
+  <div id="wk-view" style="display:none;pointer-events:none">
     <div class="wv-hdr">
       <div class="wv-title" id="wv-title"></div>
       <div style="display:flex;align-items:center;gap:8px">
@@ -513,6 +513,22 @@ body {
     </div>
     <button class="big-btn" onclick="saveMacros()">Save</button>
     <button class="cancel-btn" onclick="closeMacroModal()">Cancel</button>
+  </div>
+</div>
+
+<!-- ── SIMPLE ACTIVITY MODAL ── -->
+<div class="backdrop" id="simple-activity-modal" onclick="if(event.target===this)document.getElementById('simple-activity-modal').classList.remove('on')">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-title">
+      <span id="simple-activity-label">Rest Day</span>
+      <button class="sheet-close" onclick="document.getElementById('simple-activity-modal').classList.remove('on')">✕</button>
+    </div>
+    <input type="hidden" id="simple-activity-type" value="rest">
+    <div class="field-lbl">Date</div>
+    <input type="date" id="simple-activity-date" class="field-in" style="margin-bottom:16px">
+    <button class="big-btn" onclick="saveSimpleActivity()">Log ✓</button>
+    <button class="cancel-btn" onclick="document.getElementById('simple-activity-modal').classList.remove('on')">Cancel</button>
   </div>
 </div>
 
@@ -1035,7 +1051,9 @@ function selectWorkout(id) {
   activeWorkout = id; openCards = new Set(); setCounters = {};
   const wk = WORKOUTS[id];
   document.getElementById('home-view').style.display = 'none';
-  document.getElementById('wk-view').style.display = 'block';
+  const wkView = document.getElementById('wk-view');
+  wkView.style.display = 'block';
+  wkView.style.pointerEvents = 'auto';
   document.getElementById('wv-title').textContent = wk.name;
   document.getElementById('wv-goal').textContent = wk.goal;
   document.getElementById('wv-date').textContent = todayShort;
@@ -1045,7 +1063,9 @@ function selectWorkout(id) {
 function closeWorkout() {
   activeWorkout = null;
   document.getElementById('home-view').style.display = 'block';
-  document.getElementById('wk-view').style.display = 'none';
+  const wkView = document.getElementById('wk-view');
+  wkView.style.display = 'none';
+  wkView.style.pointerEvents = 'none';
   updateLastLabels();
 }
 
@@ -1364,16 +1384,26 @@ function deleteEntry(){
 
 // ── ACTIVITY ─────────────────────────────────────────────────────────────────
 function logQuickActivity(type) {
-  if(type==='surf'){document.getElementById('surf-date').value=todayISO;surfEffort=null;document.getElementById('surf-loc').value='';document.getElementById('surf-dur').value='';document.querySelectorAll('.eff-btn').forEach(b=>b.classList.remove('on'));document.getElementById('surf-modal').classList.add('on');}
+  if(type==='surf'){document.getElementById('surf-date').value=todayISO;surfEffort=null;document.getElementById('surf-loc').value='';document.getElementById('surf-dur').value='';document.querySelectorAll('#surf-modal .eff-btn').forEach(b=>b.classList.remove('on'));document.getElementById('surf-modal').classList.add('on');}
   else if(type==='session'){document.getElementById('session-date').value=todayISO;sessionEffort=null;document.getElementById('session-det').value='';document.querySelectorAll('#session-modal .eff-btn').forEach(b=>b.classList.remove('on'));document.getElementById('session-modal').classList.add('on');}
-  else {
-    const text=type==='rest'?'Rest day':'Sick day';
-    fetch(SHEET_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({date:todayISO,workout:'Activity Log',exercise:'Note',sets:text})
-    }).then(()=>{showToast('Logged ✓');loadAll();}).catch(()=>showToast('Error'));
-    showToast('Syncing...');
+  else if(type==='rest'||type==='sick'){
+    document.getElementById('simple-activity-type').value=type;
+    document.getElementById('simple-activity-label').textContent=type==='rest'?'Rest Day':'Sick Day';
+    document.getElementById('simple-activity-date').value=todayISO;
+    document.getElementById('simple-activity-modal').classList.add('on');
   }
 }
+function saveSimpleActivity() {
+  const type = document.getElementById('simple-activity-type').value;
+  const date = document.getElementById('simple-activity-date').value || todayISO;
+  const sets = type === 'rest' ? 'Rest day' : 'Sick day';
+  document.getElementById('simple-activity-modal').classList.remove('on');
+  showToast('Syncing...');
+  fetch(SHEET_URL, {method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({date, workout:'Activity Log', exercise:'Note', sets})
+  }).then(()=>{showToast('Logged ✓');loadAll();}).catch(()=>showToast('Error'));
+}
+
 function setEff(n){surfEffort=n;document.querySelectorAll('#surf-modal .eff-btn').forEach((b,i)=>b.classList.toggle('on',i+1===n));}
 function setSessEff(n){sessionEffort=n;document.querySelectorAll('#session-modal .eff-btn').forEach((b,i)=>b.classList.toggle('on',i+1===n));}
 function closeSurfModal(){document.getElementById('surf-modal').classList.remove('on');}
@@ -1497,7 +1527,7 @@ Round to nearest integer. Estimate fiber if unclear. Calories = protein*4 + carb
         'anthropic-dangerous-direct-browser-access': 'true'
       },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
+        model: 'claude-sonnet-4-6',
         max_tokens: 200,
         messages: [{ role: 'user', content: prompt }]
       })
